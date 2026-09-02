@@ -1,0 +1,114 @@
+import cv2
+import os
+import numpy as np
+from datetime import datetime
+from openpyxl import Workbook, load_workbook
+import tkinter as tk
+from tkinter import messagebox
+from PIL import Image, ImageTk
+
+# ===== FOLDERS =====
+IMAGE_FOLDER = "images"
+ATTENDANCE_FOLDER = "attendance"
+CAPTURE_FOLDER = "captured"
+
+os.makedirs(ATTENDANCE_FOLDER, exist_ok=True)
+os.makedirs(CAPTURE_FOLDER, exist_ok=True)
+
+# ===== LOAD HAAR CASCADE =====
+face_cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
+
+# ===== LOAD KNOWN FACES =====
+known_faces = []
+known_names = []
+
+for file in os.listdir(IMAGE_FOLDER):
+    if file.endswith(".jpg"):
+        img = cv2.imread(os.path.join(IMAGE_FOLDER, file))
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+
+        if len(faces) > 0:
+            (x, y, w, h) = faces[0]
+            face = gray[y:y+h, x:x+w]
+            face = cv2.resize(face, (200, 200))
+            known_faces.append(face)
+            known_names.append(file.split(".")[0])
+
+# ===== ATTENDANCE FUNCTION =====
+def mark_attendance(name):
+    today = datetime.now().strftime("%Y-%m-%d")
+    time_now = datetime.now().strftime("%H:%M:%S")
+    file_path = os.path.join(ATTENDANCE_FOLDER, f"Attendance_{today}.xlsx")
+
+    status = "On Time"
+    if datetime.now().hour >= 9:
+        status = "Late"
+
+    if os.path.exists(file_path):
+        wb = load_workbook(file_path)
+        ws = wb.active
+    else:
+        wb = Workbook()
+        ws = wb.active
+        ws.append(["Name", "Time", "Status"])
+
+    # Duplicate check
+    names_today = [row[0].value for row in ws.iter_rows(min_row=2)]
+    if name not in names_today:
+        ws.append([name, time_now, status])
+        wb.save(file_path)
+        print(f"{name} - {status} - {time_now}")
+
+# ===== CAMERA FUNCTION =====
+def start_camera():
+    cap = cv2.VideoCapture(0)
+
+    while True:
+        ret, frame = cap.read()
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+
+        for (x, y, w, h) in faces:
+            face = gray[y:y+h, x:x+w]
+            face = cv2.resize(face, (200, 200))
+
+            name = "Unknown"
+
+            for i, known_face in enumerate(known_faces):
+                result = cv2.matchTemplate(face, known_face, cv2.TM_CCOEFF_NORMED)
+                _, confidence, _, _ = cv2.minMaxLoc(result)
+
+                if confidence > 0.6:
+                    name = known_names[i]
+                    mark_attendance(name)
+
+                    # Save photo
+                    today_folder = os.path.join(CAPTURE_FOLDER, datetime.now().strftime("%Y-%m-%d"))
+                    os.makedirs(today_folder, exist_ok=True)
+                    cv2.imwrite(os.path.join(today_folder, f"{name}_{datetime.now().strftime('%H%M%S')}.jpg"), frame)
+
+            cv2.rectangle(frame, (x, y), (x+w, y+h), (0,255,0), 2)
+            cv2.putText(frame, name, (x, y-10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0,255,0), 2)
+
+        cv2.imshow("Face Attendance System", frame)
+
+        if cv2.waitKey(1) == 27:
+            break
+
+    cap.release()
+    cv2.destroyAllWindows()
+
+# ===== GUI =====
+root = tk.Tk()
+root.title("Face Attendance System")
+root.geometry("300x200")
+
+btn_start = tk.Button(root, text="Start Camera", command=start_camera, height=2, width=20)
+btn_start.pack(pady=20)
+
+btn_exit = tk.Button(root, text="Exit", command=root.quit, height=2, width=20)
+btn_exit.pack()
+
+root.mainloop()

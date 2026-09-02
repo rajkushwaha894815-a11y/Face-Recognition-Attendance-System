@@ -1,0 +1,95 @@
+import cv2
+import os
+import numpy as np
+from datetime import datetime
+from openpyxl import Workbook, load_workbook
+import tkinter as tk
+from tkinter import messagebox
+from PIL import Image, ImageTk
+
+# Load face detector
+face_cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
+
+# Load student images
+known_faces = {}
+image_path = "images"
+
+for file in os.listdir(image_path):
+    img = cv2.imread(f"{image_path}/{file}", 0)
+    known_faces[file.split(".")[0]] = img
+
+marked_today = []
+
+def mark_attendance(name):
+    today = datetime.now().strftime("%Y-%m-%d")
+    time_now = datetime.now().strftime("%H:%M:%S")
+    status = "Late" if datetime.now().hour >= 9 else "On Time"
+
+    file_path = f"attendance/Attendance_{today}.xlsx"
+
+    if not os.path.exists(file_path):
+        wb = Workbook()
+        ws = wb.active
+        ws.append(["Name", "Time", "Status"])
+        wb.save(file_path)
+
+    wb = load_workbook(file_path)
+    ws = wb.active
+
+    if name not in marked_today:
+        ws.append([name, time_now, status])
+        wb.save(file_path)
+        marked_today.append(name)
+        print(f"{name} - {status} - {time_now}")
+
+def start_camera():
+    cap = cv2.VideoCapture(0)
+
+    while True:
+        ret, frame = cap.read()
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+        faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+
+        for (x, y, w, h) in faces:
+            face = gray[y:y+h, x:x+w]
+
+            for name, img in known_faces.items():
+                resized = cv2.resize(img, (w, h))
+                difference = cv2.absdiff(resized, face)
+                if np.mean(difference) < 50:
+                    mark_attendance(name)
+                    cv2.putText(frame, name, (x, y-10),
+                                cv2.FONT_HERSHEY_SIMPLEX,
+                                0.9, (0,255,0), 2)
+
+                    today = datetime.now().strftime("%Y-%m-%d")
+                    cv2.imwrite(f"captured/{name}_{today}.jpg", frame)
+
+            cv2.rectangle(frame, (x,y), (x+w,y+h), (255,0,0), 2)
+
+        cv2.imshow("Face Attendance System", frame)
+
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    cap.release()
+    cv2.destroyAllWindows()
+
+# GUI
+root = tk.Tk()
+root.title("Face Attendance System")
+root.geometry("400x300")
+
+tk.Label(root, text="Face Attendance System",
+         font=("Arial", 16)).pack(pady=20)
+
+tk.Button(root, text="Start Camera",
+          command=start_camera,
+          width=20, height=2).pack(pady=10)
+
+tk.Button(root, text="Exit",
+          command=root.quit,
+          width=20, height=2).pack(pady=10)
+
+root.mainloop()
