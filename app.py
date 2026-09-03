@@ -3,6 +3,7 @@ import io
 import os
 import sqlite3
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import face_recognition
 import numpy as np
@@ -72,6 +73,13 @@ def setup_database():
 # IMPORTANT:
 # Render/Gunicorn ke liye database startup par create hoga
 setup_database()
+
+
+# =========================
+# INDIA TIMEZONE
+# =========================
+
+INDIA_TIMEZONE = ZoneInfo("Asia/Kolkata")
 
 
 # =========================
@@ -343,7 +351,13 @@ def recognize():
     student = students[best]
 
 
-    now = datetime.now()
+    # =========================
+    # INDIA CURRENT DATE/TIME
+    # =========================
+
+    now = datetime.now(
+        INDIA_TIMEZONE
+    )
 
 
     record = {
@@ -414,9 +428,11 @@ def recognize():
                 (
                     record["enrollment_id"],
                     record["name"],
+
                     now.strftime(
                         "%Y-%m-%d %H:%M:%S"
                     ),
+
                     record["date"],
                     record["time"]
                 )
@@ -473,9 +489,10 @@ if __name__ == "__main__":
 
     app.run(
         host="0.0.0.0",
+
         port=int(
             os.getenv("PORT", 5000)
         ),
+
         debug=True
     )
-
