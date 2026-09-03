@@ -1,3 +1,309 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Enroll Student</title><link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"></head>
-<body><main><header><h1>Enroll Student</h1><a href="/">Attendance</a></header><form id="enroll-form"><label>Enrollment No.<input required name="enrollment_id" placeholder="2026001"></label><label>Student name<input required name="name" placeholder="Student name"></label><label>Clear face photo<input required name="photo" type="file" accept="image/*"></label><button>Save student</button><p id="message"></p></form></main><script>document.querySelector('#enroll-form').onsubmit=async e=>{e.preventDefault();let r=await fetch('/api/enroll',{method:'POST',body:new FormData(e.target)}),d=await r.json();document.querySelector('#message').textContent=d.message||d.error}</script></body></html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Enroll Student</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<main>
+
+    <header>
+        <h1>Enroll Student</h1>
+        <a href="/">Attendance</a>
+    </header>
+
+    <form id="enroll-form">
+
+        <label>
+            Enrollment No.
+            <input
+                required
+                name="enrollment_id"
+                placeholder="2026001">
+        </label>
+
+        <label>
+            Student Name
+            <input
+                required
+                name="name"
+                placeholder="Student name">
+        </label>
+
+        <h3>Student Photo</h3>
+
+        <video
+            id="camera"
+            autoplay
+            playsinline
+            style="width:100%; max-width:500px; display:none;">
+        </video>
+
+        <canvas
+            id="canvas"
+            style="display:none;">
+        </canvas>
+
+        <div style="margin-top:15px;">
+
+            <button type="button" id="start-camera">
+                📷 Camera ON
+            </button>
+
+            <button type="button" id="stop-camera">
+                ⛔ Camera OFF
+            </button>
+
+            <button type="button" id="capture">
+                📸 Capture Photo
+            </button>
+
+        </div>
+
+        <p>OR upload a clear face photo:</p>
+
+        <input
+            name="photo"
+            id="photo"
+            type="file"
+            accept="image/*">
+
+        <img
+            id="preview"
+            style="display:none; width:250px; margin-top:15px;">
+
+        <br><br>
+
+        <button type="submit">
+            💾 Save Student
+        </button>
+
+        <p id="message"></p>
+
+    </form>
+
+</main>
+
+<script>
+
+let stream = null;
+let capturedBlob = null;
+
+const video = document.getElementById("camera");
+const canvas = document.getElementById("canvas");
+const preview = document.getElementById("preview");
+
+const startCamera = document.getElementById("start-camera");
+const stopCamera = document.getElementById("stop-camera");
+const capture = document.getElementById("capture");
+
+const photoInput = document.getElementById("photo");
+const form = document.getElementById("enroll-form");
+const message = document.getElementById("message");
+
+
+/* CAMERA ON */
+
+startCamera.onclick = async () => {
+
+    try {
+
+        stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: false
+        });
+
+        video.srcObject = stream;
+        video.style.display = "block";
+
+        message.textContent = "Camera started.";
+
+    } catch (error) {
+
+        message.textContent =
+            "Camera permission denied or camera unavailable.";
+
+        console.error(error);
+    }
+};
+
+
+/* CAMERA OFF */
+
+stopCamera.onclick = () => {
+
+    if (stream) {
+
+        stream.getTracks().forEach(track => track.stop());
+
+        stream = null;
+        video.srcObject = null;
+
+    }
+
+    video.style.display = "none";
+
+    message.textContent = "Camera stopped.";
+};
+
+
+/* CAPTURE PHOTO */
+
+capture.onclick = () => {
+
+    if (!stream) {
+
+        message.textContent =
+            "First click Camera ON.";
+
+        return;
+    }
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const ctx = canvas.getContext("2d");
+
+    ctx.drawImage(
+        video,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    canvas.toBlob(blob => {
+
+        capturedBlob = blob;
+
+        preview.src = URL.createObjectURL(blob);
+        preview.style.display = "block";
+
+        message.textContent =
+            "Photo captured successfully.";
+
+    }, "image/jpeg", 0.90);
+};
+
+
+/* FILE PREVIEW */
+
+photoInput.onchange = () => {
+
+    capturedBlob = null;
+
+    if (photoInput.files.length > 0) {
+
+        preview.src =
+            URL.createObjectURL(photoInput.files[0]);
+
+        preview.style.display = "block";
+
+        message.textContent =
+            "Photo selected.";
+
+    }
+};
+
+
+/* SAVE STUDENT */
+
+form.onsubmit = async (e) => {
+
+    e.preventDefault();
+
+    message.textContent = "Saving student...";
+
+    const formData = new FormData();
+
+    formData.append(
+        "enrollment_id",
+        form.elements["enrollment_id"].value
+    );
+
+    formData.append(
+        "name",
+        form.elements["name"].value
+    );
+
+
+    /* Camera photo */
+
+    if (capturedBlob) {
+
+        formData.append(
+            "photo",
+            capturedBlob,
+            "student.jpg"
+        );
+
+    }
+
+    /* Uploaded photo */
+
+    else if (photoInput.files.length > 0) {
+
+        formData.append(
+            "photo",
+            photoInput.files[0]
+        );
+
+    }
+
+    else {
+
+        message.textContent =
+            "Please capture or upload a photo.";
+
+        return;
+    }
+
+
+    try {
+
+        const response = await fetch(
+            "/api/enroll",
+            {
+                method: "POST",
+                body: formData
+            }
+        );
+
+        const data = await response.json();
+
+        if (response.ok) {
+
+            message.textContent =
+                "✅ " + data.message;
+
+            form.reset();
+
+            capturedBlob = null;
+
+        } else {
+
+            message.textContent =
+                "❌ " + (data.error || "Enrollment failed.");
+
+        }
+
+    } catch (error) {
+
+        message.textContent =
+            "❌ Server error. Please try again.";
+
+        console.error(error);
+    }
+};
+
+</script>
+
+</body>
+</html>
