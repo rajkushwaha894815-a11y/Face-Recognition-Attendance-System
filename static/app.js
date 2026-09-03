@@ -36,6 +36,28 @@ function stopCamera() {
     video.srcObject = null;
 }
 
+async function startCamera() {
+    try {
+        attendanceMarked = false;
+
+        cameraStream =
+            await navigator.mediaDevices.getUserMedia({
+                video: true
+            });
+
+        video.srcObject = cameraStream;
+
+        status.textContent =
+            'Look at the camera to mark attendance.';
+
+        scanInterval = setInterval(recognize, 3000);
+
+    } catch (error) {
+        status.textContent =
+            'Camera permission is required.';
+    }
+}
+
 async function recognize() {
     if (attendanceMarked || video.readyState < 2) return;
 
@@ -71,8 +93,16 @@ async function recognize() {
 
             attendanceMarked = true;
 
-            // Camera automatically OFF
+            // Camera OFF
             stopCamera();
+
+            // Next Student button show
+            const nextButton =
+                document.querySelector('#nextStudent');
+
+            if (nextButton) {
+                nextButton.style.display = 'block';
+            }
 
             loadRecords();
 
@@ -82,23 +112,36 @@ async function recognize() {
         }
 
     } catch (error) {
-        status.textContent = 'Connection error. Please try again.';
+        status.textContent =
+            'Connection error. Please try again.';
     }
 }
 
-navigator.mediaDevices.getUserMedia({ video: true })
-    .then(stream => {
-        cameraStream = stream;
-        video.srcObject = stream;
+// Next Student button
+function scanNextStudent() {
 
-        status.textContent =
-            'Look at the camera to mark attendance.';
+    const nextButton =
+        document.querySelector('#nextStudent');
 
-        scanInterval = setInterval(recognize, 3000);
-    })
-    .catch(() => {
-        status.textContent =
-            'Camera permission is required.';
-    });
+    if (nextButton) {
+        nextButton.style.display = 'none';
+    }
+
+    startCamera();
+}
+
+// Button click
+const nextButton =
+    document.querySelector('#nextStudent');
+
+if (nextButton) {
+    nextButton.addEventListener(
+        'click',
+        scanNextStudent
+    );
+}
+
+// First time camera ON
+startCamera();
 
 loadRecords();
