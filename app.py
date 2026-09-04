@@ -42,7 +42,9 @@ def connection():
 # =========================
 
 def setup_database():
+
     with connection() as db:
+
         with db.cursor() as cursor:
 
             cursor.execute("""
@@ -96,6 +98,7 @@ INDIA_TIMEZONE = ZoneInfo("Asia/Kolkata")
 def image_from_data_url(data_url):
 
     try:
+
         encoded = data_url.split(",", 1)[1]
 
         raw = base64.b64decode(encoded)
@@ -117,6 +120,7 @@ def image_from_data_url(data_url):
 
 @app.get("/")
 def index():
+
     return render_template("index.html")
 
 
@@ -126,6 +130,7 @@ def index():
 
 @app.get("/enroll")
 def enroll_page():
+
     return render_template("enroll.html")
 
 
@@ -150,6 +155,7 @@ def enroll():
 
 
     # Check details
+
     if not enrollment_id or not name or not photo:
 
         return jsonify(
@@ -177,6 +183,7 @@ def enroll():
 
 
     # Exactly one face required
+
     if len(encodings) != 1:
 
         return jsonify(
@@ -441,6 +448,7 @@ def recognize():
             with db.cursor() as cursor:
 
                 # Check today's attendance
+
                 cursor.execute(
                     """
                     SELECT attended_at
@@ -516,6 +524,94 @@ def recognize():
         found=True,
         student=record
     )
+
+
+# =========================
+# DASHBOARD STATISTICS
+# =========================
+
+@app.get("/api/dashboard")
+def dashboard():
+
+    try:
+
+        with connection() as db:
+
+            with db.cursor() as cursor:
+
+                # Total registered students
+
+                cursor.execute("""
+                    SELECT COUNT(*) AS total
+                    FROM students
+                """)
+
+                total_students = cursor.fetchone()["total"]
+
+
+                # Today's attendance
+
+                now = datetime.now(
+                    INDIA_TIMEZONE
+                )
+
+                today = now.strftime(
+                    "%Y-%m-%d"
+                )
+
+
+                cursor.execute(
+                    """
+                    SELECT COUNT(*) AS present
+                    FROM attendance
+                    WHERE attendance_date = %s
+                    """,
+                    (today,)
+                )
+
+                present_today = cursor.fetchone()["present"]
+
+
+                # Calculate absent students
+
+                absent_today = max(
+                    total_students - present_today,
+                    0
+                )
+
+
+                # Calculate attendance percentage
+
+                if total_students > 0:
+
+                    attendance_rate = round(
+                        (
+                            present_today
+                            / total_students
+                        ) * 100,
+                        1
+                    )
+
+                else:
+
+                    attendance_rate = 0
+
+
+        return jsonify({
+            "total_students": total_students,
+            "present_today": present_today,
+            "absent_today": absent_today,
+            "attendance_rate": attendance_rate
+        })
+
+
+    except Exception as error:
+
+        print("DASHBOARD ERROR:", error)
+
+        return jsonify(
+            error="Could not load dashboard statistics."
+        ), 500
 
 
 # =========================

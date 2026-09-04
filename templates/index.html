@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Face Attendance</title>
+    <title>Face Attendance Dashboard</title>
 
     <link
         rel="stylesheet"
@@ -15,78 +15,425 @@
 
 <body>
 
-<main>
+<div class="dashboard">
 
-    <header>
-        <h1>Face Attendance</h1>
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
 
-        <a href="/enroll">
-            Enroll student
-        </a>
-    </header>
+        <div class="logo">
+            <div class="logo-icon">✓</div>
+
+            <div>
+                <h2>FaceAttend</h2>
+                <span>Attendance System</span>
+            </div>
+        </div>
+
+        <nav>
+
+            <a href="/" class="nav-item active">
+                <span>🏠</span>
+                Dashboard
+            </a>
+
+            <a href="/enroll" class="nav-item">
+                <span>👥</span>
+                Students
+            </a>
+
+            <a href="#attendance" class="nav-item">
+                <span>✅</span>
+                Attendance
+            </a>
+
+            <a href="#history" class="nav-item">
+                <span>📅</span>
+                History
+            </a>
+
+        </nav>
+
+        <div class="sidebar-bottom">
+            <div class="admin-box">
+                <div class="admin-avatar">A</div>
+
+                <div>
+                    <strong>Admin</strong>
+                    <small>Administrator</small>
+                </div>
+            </div>
+        </div>
+
+    </aside>
 
 
-    <section class="camera">
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
 
-        <video
-            id="video"
-            autoplay
-            playsinline
-        ></video>
+        <!-- TOP BAR -->
+        <header class="topbar">
 
-        <canvas
-            id="canvas"
-            hidden
-        ></canvas>
+            <div>
+                <h1>Dashboard</h1>
+                <p>Welcome back! Here's today's attendance overview.</p>
+            </div>
 
-        <p id="status">
-            Starting camera…
-        </p>
+            <div class="topbar-right">
+
+                <div class="date-box">
+                    📅
+                    <span id="currentDate">Today</span>
+                </div>
+
+                <div class="notification">
+                    🔔
+                </div>
+
+            </div>
+
+        </header>
 
 
-        <!-- NEXT STUDENT BUTTON -->
+        <!-- STAT CARDS -->
+        <section class="stats-grid">
 
-        <button
-            id="nextStudent"
-            style="display: none;"
-            type="button"
+            <div class="stat-card">
+
+                <div class="stat-icon students-icon">
+                    👥
+                </div>
+
+                <div class="stat-info">
+                    <span>Total Students</span>
+                    <strong id="totalStudents">--</strong>
+                    <small>Registered students</small>
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-icon present-icon">
+                    ✓
+                </div>
+
+                <div class="stat-info">
+                    <span>Present Today</span>
+                    <strong id="presentToday">--</strong>
+                    <small>Students present</small>
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-icon absent-icon">
+                    ✕
+                </div>
+
+                <div class="stat-info">
+                    <span>Absent Today</span>
+                    <strong id="absentToday">--</strong>
+                    <small>Students absent</small>
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-icon rate-icon">
+                    %
+                </div>
+
+                <div class="stat-info">
+                    <span>Attendance Rate</span>
+                    <strong id="attendanceRate">--%</strong>
+                    <small>Today's attendance</small>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- CAMERA + QUICK ACTION -->
+        <section class="dashboard-grid">
+
+            <div class="panel camera-panel">
+
+                <div class="panel-header">
+
+                    <div>
+                        <h2>Face Recognition</h2>
+                        <p>Scan a student's face to mark attendance</p>
+                    </div>
+
+                    <span class="live-badge">
+                        ● LIVE
+                    </span>
+
+                </div>
+
+
+                <div class="camera-container">
+
+                    <video
+                        id="video"
+                        autoplay
+                        playsinline
+                    ></video>
+
+                    <canvas
+                        id="canvas"
+                        hidden
+                    ></canvas>
+
+                    <div class="camera-overlay">
+                        <div class="face-frame"></div>
+                    </div>
+
+                </div>
+
+
+                <p id="status" class="status">
+                    Starting camera…
+                </p>
+
+
+                <button
+                    id="nextStudent"
+                    class="scan-button"
+                    style="display: none;"
+                    type="button"
+                >
+                    Scan Next Student
+                </button>
+
+            </div>
+
+
+            <!-- QUICK ACTIONS -->
+            <div class="panel quick-panel">
+
+                <div class="panel-header">
+
+                    <div>
+                        <h2>Quick Actions</h2>
+                        <p>Manage your attendance system</p>
+                    </div>
+
+                </div>
+
+
+                <a href="/enroll" class="action-card">
+
+                    <div class="action-icon">
+                        ➕
+                    </div>
+
+                    <div>
+                        <strong>Enroll Student</strong>
+                        <span>Register a new student</span>
+                    </div>
+
+                    <b>→</b>
+
+                </a>
+
+
+                <a href="#attendance" class="action-card">
+
+                    <div class="action-icon">
+                        📊
+                    </div>
+
+                    <div>
+                        <strong>View Attendance</strong>
+                        <span>Check today's records</span>
+                    </div>
+
+                    <b>→</b>
+
+                </a>
+
+
+                <a href="#history" class="action-card">
+
+                    <div class="action-icon">
+                        📅
+                    </div>
+
+                    <div>
+                        <strong>Attendance History</strong>
+                        <span>View previous records</span>
+                    </div>
+
+                    <b>→</b>
+
+                </a>
+
+            </div>
+
+        </section>
+
+
+        <!-- ATTENDANCE TABLE -->
+        <section
+            class="panel attendance-panel"
+            id="attendance"
         >
-            Scan Next Student
-        </button>
 
-    </section>
+            <div class="panel-header table-header">
 
-
-    <section>
-
-        <h2>Today’s attendance</h2>
-
-        <table>
-
-            <thead>
-
-                <tr>
-                    <th>Enrollment No.</th>
-                    <th>Name</th>
-                    <th>Date</th>
-                    <th>Time</th>
-                </tr>
-
-            </thead>
+                <div>
+                    <h2>Today's Attendance</h2>
+                    <p>Students who are present today</p>
+                </div>
 
 
-            <tbody id="records"></tbody>
+                <div class="search-box">
 
-        </table>
+                    <span>🔍</span>
 
-    </section>
+                    <input
+                        type="text"
+                        id="searchInput"
+                        placeholder="Search name or enrollment ID..."
+                    >
 
-</main>
+                </div>
+
+            </div>
+
+
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+                            <th>Enrollment ID</th>
+                            <th>Student Name</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Status</th>
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="records">
+
+                        <!-- Attendance records loaded by app.js -->
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+
+        <!-- HISTORY -->
+        <section
+            class="panel history-panel"
+            id="history"
+        >
+
+            <div class="panel-header">
+
+                <div>
+                    <h2>Attendance History</h2>
+                    <p>Recent attendance activity</p>
+                </div>
+
+            </div>
+
+            <div class="history-message">
+                📅 Attendance history will appear here.
+            </div>
+
+        </section>
+
+
+        <!-- FOOTER -->
+        <footer>
+
+            <span>
+                © 2026 FaceAttend
+            </span>
+
+            <span>
+                Face Recognition Attendance System
+            </span>
+
+        </footer>
+
+    </main>
+
+</div>
 
 
 <script
     src="{{ url_for('static', filename='app.js') }}"
 ></script>
+
+
+<script>
+
+    // Current date
+    const dateElement = document.getElementById("currentDate");
+
+    if (dateElement) {
+
+        const today = new Date();
+
+        dateElement.textContent =
+            today.toLocaleDateString("en-IN", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric"
+            });
+
+    }
+
+
+    // Search attendance table
+    const searchInput =
+        document.getElementById("searchInput");
+
+    if (searchInput) {
+
+        searchInput.addEventListener("input", function () {
+
+            const search =
+                this.value.toLowerCase();
+
+            const rows =
+                document.querySelectorAll("#records tr");
+
+            rows.forEach(row => {
+
+                const text =
+                    row.textContent.toLowerCase();
+
+                row.style.display =
+                    text.includes(search)
+                        ? ""
+                        : "none";
+
+            });
+
+        });
+
+    }
+
+</script>
 
 </body>
 
