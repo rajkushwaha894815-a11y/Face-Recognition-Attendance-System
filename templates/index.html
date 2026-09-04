@@ -1,3 +1,93 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Face Attendance</title><link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"></head>
-<body><main><header><h1>Face Attendance</h1><a href="/enroll">Enroll student</a></header><section class="camera"><video id="video" autoplay playsinline></video><canvas id="canvas" hidden></canvas><p id="status">Starting camera…</p></section><section><h2>Today’s attendance</h2><table><thead><tr><th>Enrollment No.</th><th>Name</th><th>Date</th><th>Time</th></tr></thead><tbody id="records"></tbody></table></section></main><script src="{{ url_for('static', filename='app.js') }}"></script></body></html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Face Attendance</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+</head>
+
+<body>
+
+<main>
+
+    <header>
+        <h1>Face Attendance</h1>
+
+        <a href="/enroll">
+            Enroll student
+        </a>
+    </header>
+
+
+    <section class="camera">
+
+        <video
+            id="video"
+            autoplay
+            playsinline
+        ></video>
+
+        <canvas
+            id="canvas"
+            hidden
+        ></canvas>
+
+        <p id="status">
+            Starting camera…
+        </p>
+
+
+        <!-- NEXT STUDENT BUTTON -->
+
+        <button
+            id="nextStudent"
+            style="display: none;"
+            type="button"
+        >
+            Scan Next Student
+        </button>
+
+    </section>
+
+
+    <section>
+
+        <h2>Today’s attendance</h2>
+
+        <table>
+
+            <thead>
+
+                <tr>
+                    <th>Enrollment No.</th>
+                    <th>Name</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                </tr>
+
+            </thead>
+
+
+            <tbody id="records"></tbody>
+
+        </table>
+
+    </section>
+
+</main>
+
+
+<script
+    src="{{ url_for('static', filename='app.js') }}"
+></script>
+
+</body>
+
+</html>
