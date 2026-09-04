@@ -1,26 +1,16 @@
+```python
 import base64
 import io
 import os
-import sqlite3
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
 import face_recognition
 import numpy as np
+import psycopg2
+from psycopg2.extras import RealDictCursor
 from flask import Flask, jsonify, render_template, request
 from PIL import Image
-
-
-# =========================
-# PATHS
-# =========================
-
-APP_DIR = os.path.dirname(os.path.abspath(__file__))
-
-DATABASE = os.path.join(APP_DIR, "attendance.db")
-
-UPLOAD_DIR = os.path.join(APP_DIR, "known_faces")
-os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
 # =========================
@@ -33,13 +23,20 @@ app.config["MAX_CONTENT_LENGTH"] = 8 * 1024 * 1024
 
 
 # =========================
-# DATABASE CONNECTION
+# POSTGRESQL DATABASE
 # =========================
 
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL environment variable is not set.")
+
+
 def connection():
-    db = sqlite3.connect(DATABASE)
-    db.row_factory = sqlite3.Row
-    return db
+    return psycopg2.connect(
+        DATABASE_URL,
+        cursor_factory=RealDictCursor
+    )
 
 
 # =========================
@@ -50,28 +47,44 @@ def setup_database():
 
     with connection() as db:
 
-        db.executescript("""
-            CREATE TABLE IF NOT EXISTS students (
-                enrollment_id TEXT PRIMARY KEY,
-                name TEXT NOT NULL,
-                image_path TEXT NOT NULL,
-                face_encoding BLOB NOT NULL
-            );
+        with db.cursor() as cursor:
 
-            CREATE TABLE IF NOT EXISTS attendance (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                enrollment_id TEXT NOT NULL,
-                name TEXT NOT NULL,
-                attended_at TEXT NOT NULL,
-                attendance_date TEXT NOT NULL,
-                attendance_time TEXT NOT NULL,
-                UNIQUE(enrollment_id, attendance_date)
-            );
-        """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS students (
+                    enrollment_id TEXT PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    image_path TEXT,
+                    image_data BYTEA,
+                    face_encoding BYTEA NOT NULL
+                );
+            """)
+
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS attendance (
+                    id SERIAL PRIMARY KEY,
+                    enrollment_id TEXT NOT NULL,
+                    name TEXT NOT NULL,
+                    attended_at TEXT NOT NULL,
+                    attendance_date TEXT NOT NULL,
+                    attendance_time TEXT NOT NULL,
+                    UNIQUE(enrollment_id, attendance_date)
+                );
+            """)
+
+            # Agar students table pehle se exist karti hai
+            # to missing columns automatically add ho jayenge.
+            cursor.execute("""
+                ALTER TABLE students
+                ADD COLUMN IF NOT EXISTS image_path TEXT;
+            """)
+
+            cursor.execute("""
+                ALTER TABLE students
+                ADD COLUMN IF NOT EXISTS image_data BYTEA;
+            """)
 
 
-# IMPORTANT:
-# Render/Gunicorn ke liye database startup par create hoga
+# Database startup par initialize hoga
 setup_database()
 
 
@@ -192,53 +205,81 @@ def enroll():
         ), 400
 
 
-    # Save photo
-    image_path = os.path.join(
-        UPLOAD_DIR,
-        f"{safe_id}.jpg"
-    )
+    # Convert image to permanent database bytes
+    try:
 
+        image_buffer = io.BytesIO()
 
-    Image.fromarray(image).save(
-        image_path,
-        "JPEG"
-    )
-
-
-    # Save student in database
-    with connection() as db:
-
-        db.execute(
-            """
-            INSERT INTO students
-            (
-                enrollment_id,
-                name,
-                image_path,
-                face_encoding
-            )
-
-            VALUES (?, ?, ?, ?)
-
-            ON CONFLICT(enrollment_id)
-            DO UPDATE SET
-
-                name=excluded.name,
-
-                image_path=excluded.image_path,
-
-                face_encoding=excluded.face_encoding
-            """,
-
-            (
-                enrollment_id,
-                name,
-                image_path,
-                encodings[0].astype(
-                    np.float64
-                ).tobytes()
-            )
+        Image.fromarray(image).save(
+            image_buffer,
+            format="JPEG"
         )
+
+        image_data = image_buffer.getvalue()
+
+    except Exception:
+
+        return jsonify(
+            error="Could not process the uploaded photo."
+        ), 400
+
+
+    # Face encoding
+    face_encoding = encodings[0].astype(
+        np.float64
+    ).tobytes()
+
+
+    # =========================
+    # SAVE STUDENT IN POSTGRESQL
+    # =========================
+
+    try:
+
+        with connection() as db:
+
+            with db.cursor() as cursor:
+
+                cursor.execute(
+                    """
+                    INSERT INTO students
+                    (
+                        enrollment_id,
+                        name,
+                        image_path,
+                        image_data,
+                        face_encoding
+                    )
+
+                    VALUES (%s, %s, %s, %s, %s)
+
+                    ON CONFLICT(enrollment_id)
+                    DO UPDATE SET
+
+                        name = EXCLUDED.name,
+
+                        image_path = EXCLUDED.image_path,
+
+                        image_data = EXCLUDED.image_data,
+
+                        face_encoding = EXCLUDED.face_encoding
+                    """,
+
+                    (
+                        enrollment_id,
+                        f"{safe_id}.jpg",
+                        image_data,
+                        face_encoding
+                    )
+                )
+
+    except Exception as error:
+
+        print("DATABASE ERROR:", error)
+
+        return jsonify(
+            error="Could not save student to database."
+        ), 500
 
 
     return jsonify(
@@ -291,19 +332,36 @@ def recognize():
         )
 
 
-    # Get registered students
-    with connection() as db:
+    # =========================
+    # GET REGISTERED STUDENTS
+    # =========================
 
-        students = db.execute(
-            """
-            SELECT
-                enrollment_id,
-                name,
-                face_encoding
+    try:
 
-            FROM students
-            """
-        ).fetchall()
+        with connection() as db:
+
+            with db.cursor() as cursor:
+
+                cursor.execute(
+                    """
+                    SELECT
+                        enrollment_id,
+                        name,
+                        face_encoding
+
+                    FROM students
+                    """
+                )
+
+                students = cursor.fetchall()
+
+    except Exception as error:
+
+        print("DATABASE ERROR:", error)
+
+        return jsonify(
+            error="Could not read student database."
+        ), 500
 
 
     if not students:
@@ -376,69 +434,86 @@ def recognize():
     }
 
 
-    # Attendance
-    with connection() as db:
+    # =========================
+    # ATTENDANCE
+    # =========================
 
-        existing = db.execute(
-            """
-            SELECT attended_at
+    try:
 
-            FROM attendance
+        with connection() as db:
 
-            WHERE enrollment_id=?
+            with db.cursor() as cursor:
 
-            AND attendance_date=?
-            """,
+                cursor.execute(
+                    """
+                    SELECT attended_at
 
-            (
-                record["enrollment_id"],
-                record["date"]
-            )
-        ).fetchone()
+                    FROM attendance
 
+                    WHERE enrollment_id = %s
 
-        # Already marked
-        if existing:
+                    AND attendance_date = %s
+                    """,
 
-            record["already_marked"] = True
-
-            record["time"] = (
-                existing["attended_at"]
-                .split(" ")[1]
-            )
-
-
-        # New attendance
-        else:
-
-            db.execute(
-                """
-                INSERT INTO attendance
-                (
-                    enrollment_id,
-                    name,
-                    attended_at,
-                    attendance_date,
-                    attendance_time
+                    (
+                        record["enrollment_id"],
+                        record["date"]
+                    )
                 )
 
-                VALUES (?, ?, ?, ?, ?)
-                """,
+                existing = cursor.fetchone()
 
-                (
-                    record["enrollment_id"],
-                    record["name"],
 
-                    now.strftime(
-                        "%Y-%m-%d %H:%M:%S"
-                    ),
+                # Already marked
+                if existing:
 
-                    record["date"],
-                    record["time"]
-                )
-            )
+                    record["already_marked"] = True
 
-            record["already_marked"] = False
+                    record["time"] = (
+                        existing["attended_at"]
+                        .split(" ")[1]
+                    )
+
+
+                # New attendance
+                else:
+
+                    cursor.execute(
+                        """
+                        INSERT INTO attendance
+                        (
+                            enrollment_id,
+                            name,
+                            attended_at,
+                            attendance_date,
+                            attendance_time
+                        )
+
+                        VALUES (%s, %s, %s, %s, %s)
+                        """,
+
+                        (
+                            record["enrollment_id"],
+                            record["name"],
+
+                            now.strftime(
+                                "%Y-%m-%d %H:%M:%S"
+                            ),
+
+                            record["date"],
+                            record["time"]
+                        )
+                    )
+
+                    record["already_marked"] = False
+
+    except Exception as error:
+
+        print("DATABASE ERROR:", error)
+
+        return jsonify(
+            error="Could not save attendance."
+        ), 500
 
 
     return jsonify(
@@ -454,31 +529,39 @@ def recognize():
 @app.get("/api/attendance")
 def attendance():
 
-    with connection() as db:
+    try:
 
-        rows = db.execute(
-            """
-            SELECT
-                enrollment_id,
-                name,
-                attendance_date,
-                attendance_time
+        with connection() as db:
 
-            FROM attendance
+            with db.cursor() as cursor:
 
-            ORDER BY attended_at DESC
+                cursor.execute(
+                    """
+                    SELECT
+                        enrollment_id,
+                        name,
+                        attendance_date,
+                        attendance_time
 
-            LIMIT 100
-            """
-        ).fetchall()
+                    FROM attendance
 
+                    ORDER BY attended_at DESC
 
-    return jsonify(
-        [
-            dict(row)
-            for row in rows
-        ]
-    )
+                    LIMIT 100
+                    """
+                )
+
+                rows = cursor.fetchall()
+
+        return jsonify(rows)
+
+    except Exception as error:
+
+        print("DATABASE ERROR:", error)
+
+        return jsonify(
+            error="Could not load attendance."
+        ), 500
 
 
 # =========================
@@ -496,3 +579,4 @@ if __name__ == "__main__":
 
         debug=True
     )
+```
