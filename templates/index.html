@@ -21,13 +21,16 @@
     <aside class="sidebar">
 
         <div class="logo">
+
             <div class="logo-icon">✓</div>
 
             <div>
                 <h2>FaceAttend</h2>
                 <span>Attendance System</span>
             </div>
+
         </div>
+
 
         <nav>
 
@@ -36,16 +39,22 @@
                 Dashboard
             </a>
 
-            <a href="/enroll" class="nav-item">
+
+            <!-- STUDENTS -->
+            <a href="/students" class="nav-item">
                 <span>👥</span>
                 Students
             </a>
 
+
+            <!-- ATTENDANCE -->
             <a href="#attendance" class="nav-item">
                 <span>✅</span>
                 Attendance
             </a>
 
+
+            <!-- HISTORY -->
             <a href="#history" class="nav-item">
                 <span>📅</span>
                 History
@@ -53,15 +62,22 @@
 
         </nav>
 
+
         <div class="sidebar-bottom">
+
             <div class="admin-box">
-                <div class="admin-avatar">A</div>
+
+                <div class="admin-avatar">
+                    A
+                </div>
 
                 <div>
                     <strong>Admin</strong>
                     <small>Administrator</small>
                 </div>
+
             </div>
+
         </div>
 
     </aside>
@@ -70,20 +86,33 @@
     <!-- MAIN CONTENT -->
     <main class="main-content">
 
+
         <!-- TOP BAR -->
         <header class="topbar">
 
             <div>
+
                 <h1>Dashboard</h1>
-                <p>Welcome back! Here's today's attendance overview.</p>
+
+                <p>
+                    Welcome back! Here's today's attendance overview.
+                </p>
+
             </div>
+
 
             <div class="topbar-right">
 
                 <div class="date-box">
+
                     📅
-                    <span id="currentDate">Today</span>
+
+                    <span id="currentDate">
+                        Today
+                    </span>
+
                 </div>
+
 
                 <div class="notification">
                     🔔
@@ -94,9 +123,12 @@
         </header>
 
 
+
         <!-- STAT CARDS -->
         <section class="stats-grid">
 
+
+            <!-- TOTAL STUDENTS -->
             <div class="stat-card">
 
                 <div class="stat-icon students-icon">
@@ -104,14 +136,26 @@
                 </div>
 
                 <div class="stat-info">
-                    <span>Total Students</span>
-                    <strong id="totalStudents">--</strong>
-                    <small>Registered students</small>
+
+                    <span>
+                        Total Students
+                    </span>
+
+                    <strong id="totalStudents">
+                        --
+                    </strong>
+
+                    <small>
+                        Registered students
+                    </small>
+
                 </div>
 
             </div>
 
 
+
+            <!-- PRESENT -->
             <div class="stat-card">
 
                 <div class="stat-icon present-icon">
@@ -119,14 +163,26 @@
                 </div>
 
                 <div class="stat-info">
-                    <span>Present Today</span>
-                    <strong id="presentToday">--</strong>
-                    <small>Students present</small>
+
+                    <span>
+                        Present Today
+                    </span>
+
+                    <strong id="presentToday">
+                        --
+                    </strong>
+
+                    <small>
+                        Students present
+                    </small>
+
                 </div>
 
             </div>
 
 
+
+            <!-- ABSENT -->
             <div class="stat-card">
 
                 <div class="stat-icon absent-icon">
@@ -134,14 +190,26 @@
                 </div>
 
                 <div class="stat-info">
-                    <span>Absent Today</span>
-                    <strong id="absentToday">--</strong>
-                    <small>Students absent</small>
+
+                    <span>
+                        Absent Today
+                    </span>
+
+                    <strong id="absentToday">
+                        --
+                    </strong>
+
+                    <small>
+                        Students absent
+                    </small>
+
                 </div>
 
             </div>
 
 
+
+            <!-- ATTENDANCE RATE -->
             <div class="stat-card">
 
                 <div class="stat-icon rate-icon">
@@ -149,9 +217,19 @@
                 </div>
 
                 <div class="stat-info">
-                    <span>Attendance Rate</span>
-                    <strong id="attendanceRate">--%</strong>
-                    <small>Today's attendance</small>
+
+                    <span>
+                        Attendance Rate
+                    </span>
+
+                    <strong id="attendanceRate">
+                        --%
+                    </strong>
+
+                    <small>
+                        Today's attendance
+                    </small>
+
                 </div>
 
             </div>
@@ -159,23 +237,36 @@
         </section>
 
 
+
         <!-- CAMERA + QUICK ACTION -->
         <section class="dashboard-grid">
 
+
+            <!-- CAMERA -->
             <div class="panel camera-panel">
+
 
                 <div class="panel-header">
 
                     <div>
-                        <h2>Face Recognition</h2>
-                        <p>Scan a student's face to mark attendance</p>
+
+                        <h2>
+                            Face Recognition
+                        </h2>
+
+                        <p>
+                            Scan a student's face to mark attendance
+                        </p>
+
                     </div>
+
 
                     <span class="live-badge">
                         ● LIVE
                     </span>
 
                 </div>
+
 
 
                 <div class="camera-container">
@@ -186,13 +277,17 @@
                         playsinline
                     ></video>
 
+
                     <canvas
                         id="canvas"
                         hidden
                     ></canvas>
 
+
                     <div class="camera-overlay">
+
                         <div class="face-frame"></div>
+
                     </div>
 
                 </div>
@@ -215,19 +310,30 @@
             </div>
 
 
+
             <!-- QUICK ACTIONS -->
             <div class="panel quick-panel">
+
 
                 <div class="panel-header">
 
                     <div>
-                        <h2>Quick Actions</h2>
-                        <p>Manage your attendance system</p>
+
+                        <h2>
+                            Quick Actions
+                        </h2>
+
+                        <p>
+                            Manage your attendance system
+                        </p>
+
                     </div>
 
                 </div>
 
 
+
+                <!-- ENROLL -->
                 <a href="/enroll" class="action-card">
 
                     <div class="action-icon">
@@ -235,15 +341,26 @@
                     </div>
 
                     <div>
-                        <strong>Enroll Student</strong>
-                        <span>Register a new student</span>
+
+                        <strong>
+                            Enroll Student
+                        </strong>
+
+                        <span>
+                            Register a new student
+                        </span>
+
                     </div>
 
-                    <b>→</b>
+                    <b>
+                        →
+                    </b>
 
                 </a>
 
 
+
+                <!-- ATTENDANCE -->
                 <a href="#attendance" class="action-card">
 
                     <div class="action-icon">
@@ -251,15 +368,26 @@
                     </div>
 
                     <div>
-                        <strong>View Attendance</strong>
-                        <span>Check today's records</span>
+
+                        <strong>
+                            View Attendance
+                        </strong>
+
+                        <span>
+                            Check today's records
+                        </span>
+
                     </div>
 
-                    <b>→</b>
+                    <b>
+                        →
+                    </b>
 
                 </a>
 
 
+
+                <!-- HISTORY -->
                 <a href="#history" class="action-card">
 
                     <div class="action-icon">
@@ -267,11 +395,20 @@
                     </div>
 
                     <div>
-                        <strong>Attendance History</strong>
-                        <span>View previous records</span>
+
+                        <strong>
+                            Attendance History
+                        </strong>
+
+                        <span>
+                            View previous records
+                        </span>
+
                     </div>
 
-                    <b>→</b>
+                    <b>
+                        →
+                    </b>
 
                 </a>
 
@@ -280,23 +417,36 @@
         </section>
 
 
+
         <!-- ATTENDANCE TABLE -->
         <section
             class="panel attendance-panel"
             id="attendance"
         >
 
+
             <div class="panel-header table-header">
 
+
                 <div>
-                    <h2>Today's Attendance</h2>
-                    <p>Students who are present today</p>
+
+                    <h2>
+                        Today's Attendance
+                    </h2>
+
+                    <p>
+                        Students who are present today
+                    </p>
+
                 </div>
+
 
 
                 <div class="search-box">
 
-                    <span>🔍</span>
+                    <span>
+                        🔍
+                    </span>
 
                     <input
                         type="text"
@@ -309,18 +459,36 @@
             </div>
 
 
+
             <div class="table-wrapper">
+
 
                 <table>
 
                     <thead>
 
                         <tr>
-                            <th>Enrollment ID</th>
-                            <th>Student Name</th>
-                            <th>Date</th>
-                            <th>Time</th>
-                            <th>Status</th>
+
+                            <th>
+                                Enrollment ID
+                            </th>
+
+                            <th>
+                                Student Name
+                            </th>
+
+                            <th>
+                                Date
+                            </th>
+
+                            <th>
+                                Time
+                            </th>
+
+                            <th>
+                                Status
+                            </th>
+
                         </tr>
 
                     </thead>
@@ -339,26 +507,39 @@
         </section>
 
 
+
         <!-- HISTORY -->
         <section
             class="panel history-panel"
             id="history"
         >
 
+
             <div class="panel-header">
 
                 <div>
-                    <h2>Attendance History</h2>
-                    <p>Recent attendance activity</p>
+
+                    <h2>
+                        Attendance History
+                    </h2>
+
+                    <p>
+                        Recent attendance activity
+                    </p>
+
                 </div>
 
             </div>
 
+
             <div class="history-message">
+
                 📅 Attendance history will appear here.
+
             </div>
 
         </section>
+
 
 
         <!-- FOOTER -->
@@ -374,66 +555,91 @@
 
         </footer>
 
+
     </main>
 
 </div>
 
 
+
+<!-- APP JS -->
 <script
     src="{{ url_for('static', filename='app.js') }}"
 ></script>
 
 
+
 <script>
 
-    // Current date
-    const dateElement = document.getElementById("currentDate");
+    // ==========================================
+    // CURRENT DATE
+    // ==========================================
+
+    const dateElement =
+        document.getElementById("currentDate");
+
 
     if (dateElement) {
 
-        const today = new Date();
+        const today =
+            new Date();
 
         dateElement.textContent =
-            today.toLocaleDateString("en-IN", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric"
-            });
+            today.toLocaleDateString(
+                "en-IN",
+                {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric"
+                }
+            );
 
     }
 
 
-    // Search attendance table
+
+    // ==========================================
+    // SEARCH ATTENDANCE
+    // ==========================================
+
     const searchInput =
         document.getElementById("searchInput");
 
+
     if (searchInput) {
 
-        searchInput.addEventListener("input", function () {
+        searchInput.addEventListener(
+            "input",
+            function () {
 
-            const search =
-                this.value.toLowerCase();
+                const search =
+                    this.value.toLowerCase();
 
-            const rows =
-                document.querySelectorAll("#records tr");
+                const rows =
+                    document.querySelectorAll(
+                        "#records tr"
+                    );
 
-            rows.forEach(row => {
 
-                const text =
-                    row.textContent.toLowerCase();
+                rows.forEach(row => {
 
-                row.style.display =
-                    text.includes(search)
-                        ? ""
-                        : "none";
+                    const text =
+                        row.textContent.toLowerCase();
 
-            });
+                    row.style.display =
+                        text.includes(search)
+                            ? ""
+                            : "none";
 
-        });
+                });
+
+            }
+        );
 
     }
 
 </script>
+
 
 </body>
 

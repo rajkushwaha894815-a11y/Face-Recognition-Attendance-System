@@ -1,0 +1,777 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Students Management</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        .students-page {
+            padding: 25px;
+        }
+
+        .students-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .students-header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+
+        .students-header p {
+            margin-top: 6px;
+            color: #777;
+        }
+
+        .add-student-btn {
+            background: #2563eb;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .add-student-btn:hover {
+            background: #1d4ed8;
+        }
+
+        .student-summary {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+        }
+
+        .summary-title {
+            color: #777;
+            font-size: 14px;
+        }
+
+        .summary-number {
+            font-size: 30px;
+            font-weight: 700;
+            margin-top: 5px;
+        }
+
+        .students-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+        }
+
+        .students-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .students-toolbar h2 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .search-box {
+            width: 280px;
+            max-width: 100%;
+            padding: 11px 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .search-box:focus {
+            border-color: #2563eb;
+        }
+
+        .students-table-wrapper {
+            overflow-x: auto;
+        }
+
+        .students-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .students-table th {
+            background: #f8fafc;
+            color: #555;
+            font-size: 13px;
+            text-align: left;
+            padding: 14px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .students-table td {
+            padding: 14px;
+            border-bottom: 1px solid #eee;
+            vertical-align: middle;
+        }
+
+        .student-photo {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #e5e7eb;
+        }
+
+        .student-name {
+            font-weight: 600;
+        }
+
+        .enrollment-id {
+            color: #555;
+            font-size: 14px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 20px;
+            background: #dcfce7;
+            color: #166534;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .view-btn {
+            border: none;
+            background: #dbeafe;
+            color: #1d4ed8;
+            padding: 8px 12px;
+            border-radius: 7px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .view-btn:hover {
+            background: #bfdbfe;
+        }
+
+        .delete-btn {
+            border: none;
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 8px 12px;
+            border-radius: 7px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .delete-btn:hover {
+            background: #fecaca;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 45px 20px;
+            color: #777;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 8px;
+            color: #444;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 35px;
+            color: #777;
+        }
+
+        /* DEVELOPER FOOTER */
+        .developer-footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 10px;
+            color: #777;
+            font-size: 13px;
+        }
+
+        .developer-footer strong {
+            color: #2563eb;
+            font-weight: 700;
+        }
+
+        @media (max-width: 768px) {
+            .students-page {
+                padding: 15px;
+            }
+
+            .students-header h1 {
+                font-size: 23px;
+            }
+
+            .search-box {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="dashboard-container">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+        <div class="logo">
+            <h2>Face Attendance</h2>
+        </div>
+
+        <nav>
+
+            <a href="/" class="nav-item">
+                Dashboard
+            </a>
+
+            <a href="/students" class="nav-item active">
+                Students
+            </a>
+
+            <a href="/enroll" class="nav-item">
+                Add Student
+            </a>
+
+            <a href="/#attendance" class="nav-item">
+                Attendance
+            </a>
+
+            <a href="/#history" class="nav-item">
+                History
+            </a>
+
+        </nav>
+
+        <div class="admin-box">
+            <strong>Admin</strong>
+            <span>Attendance System</span>
+        </div>
+
+    </aside>
+
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+
+        <!-- TOP BAR -->
+        <header class="topbar">
+
+            <div>
+                <h2>Students Management</h2>
+            </div>
+
+            <div id="currentDate"></div>
+
+        </header>
+
+
+        <!-- PAGE -->
+        <section class="students-page">
+
+            <!-- HEADER -->
+            <div class="students-header">
+
+                <div>
+
+                    <h1>Students</h1>
+
+                    <p>
+                        Manage all registered students
+                    </p>
+
+                </div>
+
+                <a href="/enroll" class="add-student-btn">
+                    + Add Student
+                </a>
+
+            </div>
+
+
+            <!-- SUMMARY -->
+            <div class="student-summary">
+
+                <div class="summary-title">
+                    Total Registered Students
+                </div>
+
+                <div class="summary-number" id="totalStudents">
+                    0
+                </div>
+
+            </div>
+
+
+            <!-- STUDENTS TABLE -->
+            <div class="students-card">
+
+                <div class="students-toolbar">
+
+                    <h2>
+                        Student List
+                    </h2>
+
+                    <input
+                        type="text"
+                        id="searchInput"
+                        class="search-box"
+                        placeholder="Search by name or enrollment ID..."
+                    >
+
+                </div>
+
+
+                <div class="students-table-wrapper">
+
+                    <table class="students-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Photo
+                                </th>
+
+                                <th>
+                                    Enrollment ID
+                                </th>
+
+                                <th>
+                                    Student Name
+                                </th>
+
+                                <th>
+                                    Status
+                                </th>
+
+                                <th>
+                                    Action
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody id="studentsTableBody">
+
+                            <tr>
+
+                                <td
+                                    colspan="5"
+                                    class="loading"
+                                >
+                                    Loading students...
+                                </td>
+
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- DEVELOPER CREDIT -->
+        <footer class="developer-footer">
+
+            <p>
+                MADE BY
+                <strong>RAJ KUSHWAHA</strong>
+            </p>
+
+        </footer>
+
+    </main>
+
+</div>
+
+
+<script>
+
+let allStudents = [];
+
+
+// ==========================================
+// LOAD STUDENTS
+// ==========================================
+
+async function loadStudents() {
+
+    const tableBody =
+        document.getElementById("studentsTableBody");
+
+    try {
+
+        const response =
+            await fetch("/api/students");
+
+        const data =
+            await response.json();
+
+        if (!data.success) {
+
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="empty-state">
+                        <h3>Unable to load students</h3>
+                        <p>Please try again.</p>
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+        allStudents =
+            data.students || [];
+
+        document.getElementById("totalStudents").textContent =
+            allStudents.length;
+
+        displayStudents(allStudents);
+
+    } catch (error) {
+
+        console.error(error);
+
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="5" class="empty-state">
+                    <h3>Something went wrong</h3>
+                    <p>Could not connect to the server.</p>
+                </td>
+            </tr>
+        `;
+
+    }
+
+}
+
+
+// ==========================================
+// DISPLAY STUDENTS
+// ==========================================
+
+function displayStudents(students) {
+
+    const tableBody =
+        document.getElementById("studentsTableBody");
+
+    if (students.length === 0) {
+
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="5" class="empty-state">
+
+                    <h3>
+                        No Students Found
+                    </h3>
+
+                    <p>
+                        Add your first student to get started.
+                    </p>
+
+                </td>
+            </tr>
+        `;
+
+        return;
+    }
+
+
+    tableBody.innerHTML =
+        students.map(student => {
+
+            const photoUrl =
+                "/api/students/" +
+                encodeURIComponent(student.enrollment_id) +
+                "/photo";
+
+
+            return `
+                <tr>
+
+                    <td>
+
+                        <img
+                            src="${photoUrl}"
+                            class="student-photo"
+                            alt="${escapeHtml(student.name)}"
+                            onerror="this.style.display='none'"
+                        >
+
+                    </td>
+
+
+                    <td>
+
+                        <span class="enrollment-id">
+                            ${escapeHtml(student.enrollment_id)}
+                        </span>
+
+                    </td>
+
+
+                    <td>
+
+                        <span class="student-name">
+                            ${escapeHtml(student.name)}
+                        </span>
+
+                    </td>
+
+
+                    <td>
+
+                        <span class="status-badge">
+                            Active
+                        </span>
+
+                    </td>
+
+
+                    <td>
+
+                        <div class="action-buttons">
+
+                            <button
+                                class="view-btn"
+                                onclick="viewAttendance('${escapeJs(student.enrollment_id)}')"
+                            >
+                                View Attendance
+                            </button>
+
+
+                            <button
+                                class="delete-btn"
+                                onclick="deleteStudent('${escapeJs(student.enrollment_id)}')"
+                            >
+                                Delete
+                            </button>
+
+                        </div>
+
+                    </td>
+
+                </tr>
+            `;
+
+        }).join("");
+
+}
+
+
+// ==========================================
+// SEARCH
+// ==========================================
+
+document
+    .getElementById("searchInput")
+    .addEventListener("input", function() {
+
+        const search =
+            this.value.toLowerCase().trim();
+
+        const filtered =
+            allStudents.filter(student =>
+
+                student.name
+                    .toLowerCase()
+                    .includes(search)
+
+                ||
+
+                student.enrollment_id
+                    .toLowerCase()
+                    .includes(search)
+
+            );
+
+        displayStudents(filtered);
+
+    });
+
+
+// ==========================================
+// VIEW ATTENDANCE
+// ==========================================
+
+function viewAttendance(enrollmentId) {
+
+    window.location.href =
+        "/#history?student=" +
+        encodeURIComponent(enrollmentId);
+
+}
+
+
+// ==========================================
+// DELETE STUDENT
+// ==========================================
+
+async function deleteStudent(enrollmentId) {
+
+    const student =
+        allStudents.find(
+            s => s.enrollment_id === enrollmentId
+        );
+
+    if (!student) {
+        return;
+    }
+
+
+    const confirmed = confirm(
+        `Are you sure you want to delete ${student.name}?
+
+This will also remove their attendance records.`
+    );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/students/" +
+                encodeURIComponent(enrollmentId),
+                {
+                    method: "DELETE"
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (data.success) {
+
+            alert(
+                "Student deleted successfully."
+            );
+
+            loadStudents();
+
+        } else {
+
+            alert(
+                data.message ||
+                "Could not delete student."
+            );
+
+        }
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(
+            "Server error. Please try again."
+        );
+
+    }
+
+}
+
+
+// ==========================================
+// SECURITY HELPERS
+// ==========================================
+
+function escapeHtml(text) {
+
+    const div =
+        document.createElement("div");
+
+    div.textContent = text;
+
+    return div.innerHTML;
+
+}
+
+
+function escapeJs(text) {
+
+    return String(text)
+        .replace(/\\/g, "\\\\")
+        .replace(/'/g, "\\'");
+
+}
+
+
+// ==========================================
+// DATE
+// ==========================================
+
+function updateDate() {
+
+    const now =
+        new Date();
+
+    document.getElementById(
+        "currentDate"
+    ).textContent =
+
+        now.toLocaleDateString(
+            "en-IN",
+            {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric"
+            }
+        );
+
+}
+
+
+// ==========================================
+// START
+// ==========================================
+
+updateDate();
+
+loadStudents();
+
+</script>
+
+</body>
+</html>
+```
