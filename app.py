@@ -1,63 +1,84 @@
-import base64
-import io
 import os
+import pickle
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from urllib.parse import urlparse, unquote
 
+import cv2
 import face_recognition
 import numpy as np
 import psycopg2
 from psycopg2.extras import RealDictCursor
+
 from flask import Flask, jsonify, render_template, request
-from PIL import Image
 
 
-# =========================
+# ==========================================
 # FLASK APP
-# =========================
+# ==========================================
 
 app = Flask(__name__)
-app.config["MAX_CONTENT_LENGTH"] = 8 * 1024 * 1024
 
 
-# =========================
-# POSTGRESQL DATABASE
-# =========================
+# ==========================================
+# DATABASE CONFIGURATION
+# ==========================================
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = os.environ.get("DATABASE_URL")
 
 if not DATABASE_URL:
     raise RuntimeError("DATABASE_URL environment variable is not set.")
 
 
 def connection():
+
+    parsed = urlparse(DATABASE_URL)
+
     return psycopg2.connect(
-        DATABASE_URL,
-        cursor_factory=RealDictCursor
+        host=parsed.hostname,
+        port=parsed.port or 5432,
+        database=parsed.path.lstrip("/"),
+        user=unquote(parsed.username),
+        password=unquote(parsed.password),
+        sslmode="require"
     )
 
 
-# =========================
-# DATABASE SETUP
-# =========================
+# ==========================================
+# INDIA TIMEZONE
+# ==========================================
 
-def setup_database():
+INDIA_TZ = ZoneInfo("Asia/Kolkata")
+
+
+def india_now():
+    return datetime.now(INDIA_TZ)
+
+
+# ==========================================
+# DATABASE INITIALIZATION
+# ==========================================
+
+def init_db():
 
     with connection() as db:
 
         with db.cursor() as cursor:
 
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS students (
                     enrollment_id TEXT PRIMARY KEY,
                     name TEXT NOT NULL,
                     image_path TEXT,
                     image_data BYTEA,
                     face_encoding BYTEA NOT NULL
-                );
-            """)
+                )
+                """
+            )
 
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS attendance (
                     id SERIAL PRIMARY KEY,
                     enrollment_id TEXT NOT NULL,
@@ -66,67 +87,26 @@ def setup_database():
                     attendance_date TEXT NOT NULL,
                     attendance_time TEXT NOT NULL,
                     UNIQUE(enrollment_id, attendance_date)
-                );
-            """)
+                )
+                """
+            )
 
-            cursor.execute("""
-                ALTER TABLE students
-                ADD COLUMN IF NOT EXISTS image_path TEXT;
-            """)
-
-            cursor.execute("""
-                ALTER TABLE students
-                ADD COLUMN IF NOT EXISTS image_data BYTEA;
-            """)
+        db.commit()
 
 
-# Initialize database
-setup_database()
-
-
-# =========================
-# INDIA TIMEZONE
-# =========================
-
-INDIA_TIMEZONE = ZoneInfo("Asia/Kolkata")
-
-
-# =========================
-# IMAGE FROM CAMERA
-# =========================
-
-def image_from_data_url(data_url):
-
-    try:
-
-        encoded = data_url.split(",", 1)[1]
-
-        raw = base64.b64decode(encoded)
-
-        image = Image.open(
-            io.BytesIO(raw)
-        ).convert("RGB")
-
-        return np.array(image)
-
-    except (IndexError, ValueError, OSError):
-
-        return None
-
-
-# =========================
+# ==========================================
 # HOME PAGE
-# =========================
+# ==========================================
 
 @app.get("/")
-def index():
+def home():
 
     return render_template("index.html")
 
 
-# =========================
+# ==========================================
 # ENROLL PAGE
-# =========================
+# ==========================================
 
 @app.get("/enroll")
 def enroll_page():
@@ -134,121 +114,135 @@ def enroll_page():
     return render_template("enroll.html")
 
 
-# =========================
+# ==========================================
 # ENROLL STUDENT
-# =========================
+# ==========================================
 
 @app.post("/api/enroll")
-def enroll():
-
-    enrollment_id = request.form.get(
-        "enrollment_id",
-        ""
-    ).strip()
-
-    name = request.form.get(
-        "name",
-        ""
-    ).strip()
-
-    photo = request.files.get("photo")
-
-
-    # Check details
-
-    if not enrollment_id or not name or not photo:
-
-        return jsonify(
-            error="Enrollment ID, name, and photo are required."
-        ), 400
-
-
-    # =========================
-    # READ IMAGE AND DETECT FACE
-    # =========================
+def enroll_student():
 
     try:
 
-        image = face_recognition.load_image_file(photo)
+        enrollment_id = request.form.get(
+            "enrollment_id",
+            ""
+        ).strip()
 
+        name = request.form.get(
+            "name",
+            ""
+        ).strip()
+
+        image = request.files.get("image")
+
+        if not enrollment_id:
+
+            return jsonify(
+                error="Enrollment ID is required."
+            ), 400
+
+        if not name:
+
+            return jsonify(
+                error="Student name is required."
+            ), 400
+
+        if not image:
+
+            return jsonify(
+                error="Student image is required."
+            ), 400
+
+        # Read image
+        image_bytes = image.read()
+
+        np_array = np.frombuffer(
+            image_bytes,
+            np.uint8
+        )
+
+        frame = cv2.imdecode(
+            np_array,
+            cv2.IMREAD_COLOR
+        )
+
+        if frame is None:
+
+            return jsonify(
+                error="Invalid image."
+            ), 400
+
+        # BGR -> RGB
+        rgb_image = cv2.cvtColor(
+            frame,
+            cv2.COLOR_BGR2RGB
+        )
+
+        # Detect faces
+        face_locations = face_recognition.face_locations(
+            rgb_image,
+            model="hog"
+        )
+
+        if len(face_locations) == 0:
+
+            return jsonify(
+                error=(
+                    "No face detected. "
+                    "Please upload a clear face photo."
+                )
+            ), 400
+
+        if len(face_locations) > 1:
+
+            return jsonify(
+                error=(
+                    "Multiple faces detected. "
+                    "Please upload a photo with only one face."
+                )
+            ), 400
+
+        # Create face encoding
         encodings = face_recognition.face_encodings(
-            image
+            rgb_image,
+            face_locations
         )
 
-    except Exception:
+        if not encodings:
 
-        return jsonify(
-            error="The uploaded image could not be read."
-        ), 400
+            return jsonify(
+                error="Could not create face encoding."
+            ), 400
 
+        face_encoding = encodings[0]
 
-    # Exactly one face required
-
-    if len(encodings) != 1:
-
-        return jsonify(
-            error="Upload a clear photo containing exactly one face."
-        ), 400
-
-
-    # =========================
-    # SAFE FILE NAME
-    # =========================
-
-    safe_id = "".join(
-        char
-        for char in enrollment_id
-        if char.isalnum() or char in "-_"
-    )
-
-    if not safe_id:
-
-        return jsonify(
-            error="Enrollment ID contains invalid characters."
-        ), 400
-
-
-    # =========================
-    # CONVERT IMAGE TO BYTES
-    # =========================
-
-    try:
-
-        image_buffer = io.BytesIO()
-
-        Image.fromarray(image).save(
-            image_buffer,
-            format="JPEG"
+        encoding_bytes = pickle.dumps(
+            face_encoding
         )
-
-        image_data = image_buffer.getvalue()
-
-    except Exception:
-
-        return jsonify(
-            error="Could not process the uploaded photo."
-        ), 400
-
-
-    # =========================
-    # FACE ENCODING
-    # =========================
-
-    face_encoding = encodings[0].astype(
-        np.float64
-    ).tobytes()
-
-
-    # =========================
-    # SAVE STUDENT
-    # =========================
-
-    try:
 
         with connection() as db:
 
             with db.cursor() as cursor:
 
+                # Check duplicate enrollment ID
+                cursor.execute(
+                    """
+                    SELECT enrollment_id
+                    FROM students
+                    WHERE enrollment_id = %s
+                    """,
+                    (enrollment_id,)
+                )
+
+                existing = cursor.fetchone()
+
+                if existing:
+
+                    return jsonify(
+                        error="Enrollment ID already exists."
+                    ), 409
+
+                # Save student
                 cursor.execute(
                     """
                     INSERT INTO students
@@ -260,92 +254,107 @@ def enroll():
                         face_encoding
                     )
                     VALUES (%s, %s, %s, %s, %s)
-
-                    ON CONFLICT(enrollment_id)
-                    DO UPDATE SET
-                        name = EXCLUDED.name,
-                        image_path = EXCLUDED.image_path,
-                        image_data = EXCLUDED.image_data,
-                        face_encoding = EXCLUDED.face_encoding
                     """,
                     (
                         enrollment_id,
                         name,
-                        f"{safe_id}.jpg",
-                        image_data,
-                        face_encoding
+                        image.filename,
+                        psycopg2.Binary(image_bytes),
+                        psycopg2.Binary(encoding_bytes)
                     )
                 )
 
-    except Exception as error:
-
-        print("DATABASE ERROR:", error)
+            db.commit()
 
         return jsonify(
-            error="Could not save student to database."
+            success=True,
+            message="Student enrolled successfully.",
+            enrollment_id=enrollment_id,
+            name=name
+        )
+
+    except Exception as error:
+
+        print("ENROLL ERROR:", error)
+
+        return jsonify(
+            error="Could not enroll student."
         ), 500
 
 
-    return jsonify(
-        message=f"{name} enrolled successfully."
-    )
-
-
-# =========================
+# ==========================================
 # FACE RECOGNITION
-# =========================
+# ==========================================
 
 @app.post("/api/recognize")
 def recognize():
 
-    payload = request.get_json(
-        silent=True
-    ) or {}
-
-    image = image_from_data_url(
-        payload.get("image", "")
-    )
-
-
-    if image is None:
-
-        return jsonify(
-            error="Invalid camera image."
-        ), 400
-
-
-    # =========================
-    # DETECT FACES
-    # =========================
-
-    locations = face_recognition.face_locations(
-        image,
-        model="hog"
-    )
-
-    encodings = face_recognition.face_encodings(
-        image,
-        locations
-    )
-
-
-    if not encodings:
-
-        return jsonify(
-            found=False,
-            message="No face detected. Look at the camera."
-        )
-
-
-    # =========================
-    # GET REGISTERED STUDENTS
-    # =========================
-
     try:
 
+        image = request.files.get("image")
+
+        if not image:
+
+            return jsonify(
+                error="Image is required."
+            ), 400
+
+        image_bytes = image.read()
+
+        np_array = np.frombuffer(
+            image_bytes,
+            np.uint8
+        )
+
+        frame = cv2.imdecode(
+            np_array,
+            cv2.IMREAD_COLOR
+        )
+
+        if frame is None:
+
+            return jsonify(
+                error="Invalid image."
+            ), 400
+
+        # Convert BGR -> RGB
+        rgb_image = cv2.cvtColor(
+            frame,
+            cv2.COLOR_BGR2RGB
+        )
+
+        # Detect faces
+        face_locations = face_recognition.face_locations(
+            rgb_image,
+            model="hog"
+        )
+
+        if not face_locations:
+
+            return jsonify(
+                found=False,
+                message="No face detected."
+            )
+
+        # Generate encodings
+        face_encodings = face_recognition.face_encodings(
+            rgb_image,
+            face_locations
+        )
+
+        if not face_encodings:
+
+            return jsonify(
+                found=False,
+                message="Could not read face."
+            )
+
+        # Get registered students
         with connection() as db:
 
-            with db.cursor() as cursor:
+            with db.cursor(
+                cursor_factory=RealDictCursor
+            ) as cursor:
 
                 cursor.execute(
                     """
@@ -359,312 +368,350 @@ def recognize():
 
                 students = cursor.fetchall()
 
-    except Exception as error:
+        if not students:
 
-        print("DATABASE ERROR:", error)
-
-        return jsonify(
-            error="Could not read student database."
-        ), 500
-
-
-    if not students:
-
-        return jsonify(
-            found=False,
-            message="No students enrolled yet."
-        )
-
-
-    # =========================
-    # CONVERT STORED ENCODINGS
-    # =========================
-
-    known = np.array(
-        [
-            np.frombuffer(
-                row["face_encoding"],
-                dtype=np.float64
+            return jsonify(
+                found=False,
+                message="No students are registered."
             )
-            for row in students
-        ]
-    )
 
+        known_encodings = []
+        known_students = []
 
-    # =========================
-    # COMPARE FACES
-    # =========================
+        for student in students:
 
-    distances = face_recognition.face_distance(
-        known,
-        encodings[0]
-    )
+            try:
 
-    best = int(
-        np.argmin(distances)
-    )
+                encoding = pickle.loads(
+                    bytes(student["face_encoding"])
+                )
 
+                known_encodings.append(
+                    encoding
+                )
 
-    # =========================
-    # FACE NOT MATCHED
-    # =========================
+                known_students.append(
+                    student
+                )
 
-    if distances[best] > 0.48:
+            except Exception as error:
+
+                print(
+                    "ENCODING LOAD ERROR:",
+                    error
+                )
+
+        if not known_encodings:
+
+            return jsonify(
+                found=False,
+                message="No valid face encodings found."
+            )
+
+        # Check detected faces
+        for face_encoding in face_encodings:
+
+            distances = face_recognition.face_distance(
+                known_encodings,
+                face_encoding
+            )
+
+            best_index = int(
+                np.argmin(distances)
+            )
+
+            best_distance = float(
+                distances[best_index]
+            )
+
+            # Recognition threshold
+            if best_distance <= 0.48:
+
+                student = known_students[
+                    best_index
+                ]
+
+                now = india_now()
+
+                attendance_date = now.strftime(
+                    "%Y-%m-%d"
+                )
+
+                attendance_time = now.strftime(
+                    "%H:%M:%S"
+                )
+
+                attended_at = now.isoformat()
+
+                already_marked = False
+
+                with connection() as db:
+
+                    with db.cursor() as cursor:
+
+                        cursor.execute(
+                            """
+                            SELECT id
+                            FROM attendance
+                            WHERE enrollment_id = %s
+                            AND attendance_date = %s
+                            """,
+                            (
+                                student["enrollment_id"],
+                                attendance_date
+                            )
+                        )
+
+                        existing = cursor.fetchone()
+
+                        if existing:
+
+                            already_marked = True
+
+                        else:
+
+                            cursor.execute(
+                                """
+                                INSERT INTO attendance
+                                (
+                                    enrollment_id,
+                                    name,
+                                    attended_at,
+                                    attendance_date,
+                                    attendance_time
+                                )
+                                VALUES (%s, %s, %s, %s, %s)
+                                """,
+                                (
+                                    student["enrollment_id"],
+                                    student["name"],
+                                    attended_at,
+                                    attendance_date,
+                                    attendance_time
+                                )
+                            )
+
+                    db.commit()
+
+                return jsonify(
+                    found=True,
+                    student={
+                        "enrollment_id":
+                            student["enrollment_id"],
+                        "name":
+                            student["name"]
+                    },
+                    date=attendance_date,
+                    time=attendance_time,
+                    already_marked=already_marked,
+                    message=(
+                        "Attendance already marked today."
+                        if already_marked
+                        else "Attendance marked successfully."
+                    )
+                )
 
         return jsonify(
             found=False,
             message="Face is not registered."
         )
 
-
-    student = students[best]
-
-
-    # =========================
-    # INDIA CURRENT DATE/TIME
-    # =========================
-
-    now = datetime.now(
-        INDIA_TIMEZONE
-    )
-
-
-    record = {
-        "enrollment_id": student["enrollment_id"],
-        "name": student["name"],
-        "date": now.strftime("%Y-%m-%d"),
-        "time": now.strftime("%H:%M:%S")
-    }
-
-
-    # =========================
-    # ATTENDANCE
-    # =========================
-
-    try:
-
-        with connection() as db:
-
-            with db.cursor() as cursor:
-
-                # Check today's attendance
-
-                cursor.execute(
-                    """
-                    SELECT attended_at
-                    FROM attendance
-                    WHERE enrollment_id = %s
-                    AND attendance_date = %s
-                    """,
-                    (
-                        record["enrollment_id"],
-                        record["date"]
-                    )
-                )
-
-                existing = cursor.fetchone()
-
-
-                # =========================
-                # ALREADY MARKED
-                # =========================
-
-                if existing:
-
-                    record["already_marked"] = True
-
-                    record["time"] = (
-                        existing["attended_at"]
-                        .split(" ")[1]
-                    )
-
-
-                # =========================
-                # NEW ATTENDANCE
-                # =========================
-
-                else:
-
-                    cursor.execute(
-                        """
-                        INSERT INTO attendance
-                        (
-                            enrollment_id,
-                            name,
-                            attended_at,
-                            attendance_date,
-                            attendance_time
-                        )
-                        VALUES (%s, %s, %s, %s, %s)
-                        """,
-                        (
-                            record["enrollment_id"],
-                            record["name"],
-                            now.strftime(
-                                "%Y-%m-%d %H:%M:%S"
-                            ),
-                            record["date"],
-                            record["time"]
-                        )
-                    )
-
-                    record["already_marked"] = False
-
-
     except Exception as error:
 
-        print("DATABASE ERROR:", error)
+        print("RECOGNITION ERROR:", error)
 
         return jsonify(
-            error="Could not save attendance."
+            error="Face recognition failed."
         ), 500
 
 
-    return jsonify(
-        found=True,
-        student=record
-    )
-
-
-# =========================
-# DASHBOARD STATISTICS
-# =========================
+# ==========================================
+# DASHBOARD
+# ==========================================
 
 @app.get("/api/dashboard")
 def dashboard():
 
     try:
 
+        today = india_now().strftime(
+            "%Y-%m-%d"
+        )
+
         with connection() as db:
 
-            with db.cursor() as cursor:
+            with db.cursor(
+                cursor_factory=RealDictCursor
+            ) as cursor:
 
-                # Total registered students
-
-                cursor.execute("""
-                    SELECT COUNT(*) AS total
-                    FROM students
-                """)
-
-                total_students = cursor.fetchone()["total"]
-
-
-                # Today's attendance
-
-                now = datetime.now(
-                    INDIA_TIMEZONE
-                )
-
-                today = now.strftime(
-                    "%Y-%m-%d"
-                )
-
-
+                # Total students
                 cursor.execute(
                     """
-                    SELECT COUNT(*) AS present
+                    SELECT COUNT(*) AS total
+                    FROM students
+                    """
+                )
+
+                total_students = int(
+                    cursor.fetchone()["total"]
+                )
+
+                # Present today
+                cursor.execute(
+                    """
+                    SELECT COUNT(*) AS total
                     FROM attendance
                     WHERE attendance_date = %s
                     """,
                     (today,)
                 )
 
-                present_today = cursor.fetchone()["present"]
-
-
-                # Calculate absent students
-
-                absent_today = max(
-                    total_students - present_today,
-                    0
+                present_today = int(
+                    cursor.fetchone()["total"]
                 )
 
+        absent_today = max(
+            total_students - present_today,
+            0
+        )
 
-                # Calculate attendance percentage
+        if total_students > 0:
 
-                if total_students > 0:
+            attendance_rate = round(
+                (
+                    present_today /
+                    total_students
+                ) * 100,
+                2
+            )
 
-                    attendance_rate = round(
-                        (
-                            present_today
-                            / total_students
-                        ) * 100,
-                        1
-                    )
+        else:
 
-                else:
+            attendance_rate = 0
 
-                    attendance_rate = 0
-
-
-        return jsonify({
-            "total_students": total_students,
-            "present_today": present_today,
-            "absent_today": absent_today,
-            "attendance_rate": attendance_rate
-        })
-
+        return jsonify(
+            total_students=total_students,
+            present_today=present_today,
+            absent_today=absent_today,
+            attendance_rate=attendance_rate
+        )
 
     except Exception as error:
 
         print("DASHBOARD ERROR:", error)
 
         return jsonify(
-            error="Could not load dashboard statistics."
+            error="Could not load dashboard."
         ), 500
 
 
-# =========================
-# ATTENDANCE LIST
-# =========================
+# ==========================================
+# TODAY'S ATTENDANCE
+# ==========================================
 
 @app.get("/api/attendance")
 def attendance():
 
     try:
 
+        today = india_now().strftime(
+            "%Y-%m-%d"
+        )
+
         with connection() as db:
 
-            with db.cursor() as cursor:
+            with db.cursor(
+                cursor_factory=RealDictCursor
+            ) as cursor:
 
                 cursor.execute(
                     """
                     SELECT
+                        id,
                         enrollment_id,
                         name,
                         attendance_date,
-                        attendance_time
+                        attendance_time,
+                        attended_at
                     FROM attendance
+                    WHERE attendance_date = %s
                     ORDER BY attended_at DESC
                     LIMIT 100
-                    """
+                    """,
+                    (today,)
                 )
 
                 rows = cursor.fetchall()
 
-
         return jsonify(rows)
-
 
     except Exception as error:
 
-        print("DATABASE ERROR:", error)
+        print("ATTENDANCE ERROR:", error)
 
         return jsonify(
             error="Could not load attendance."
         ), 500
 
 
-# =========================
-# LOCAL RUN
-# =========================
+# ==========================================
+# ATTENDANCE HISTORY
+# ==========================================
+
+@app.get("/api/history")
+def attendance_history():
+
+    try:
+
+        with connection() as db:
+
+            with db.cursor(
+                cursor_factory=RealDictCursor
+            ) as cursor:
+
+                cursor.execute(
+                    """
+                    SELECT
+                        id,
+                        enrollment_id,
+                        name,
+                        attendance_date,
+                        attendance_time,
+                        attended_at
+                    FROM attendance
+                    ORDER BY attended_at DESC
+                    LIMIT 500
+                    """
+                )
+
+                rows = cursor.fetchall()
+
+        return jsonify(rows)
+
+    except Exception as error:
+
+        print("HISTORY ERROR:", error)
+
+        return jsonify(
+            error="Could not load attendance history."
+        ), 500
+
+
+# ==========================================
+# RUN APPLICATION
+# ==========================================
 
 if __name__ == "__main__":
+
+    init_db()
 
     app.run(
         host="0.0.0.0",
         port=int(
-            os.getenv("PORT", 5000)
+            os.environ.get(
+                "PORT",
+                5000
+            )
         ),
         debug=True
     )

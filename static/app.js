@@ -69,7 +69,7 @@ async function loadDashboard() {
 
 
 // =========================
-// LOAD ATTENDANCE RECORDS
+// LOAD TODAY'S ATTENDANCE
 // =========================
 
 async function loadRecords() {
@@ -84,8 +84,9 @@ async function loadRecords() {
 
 
         if (data.error) {
+
             records.innerHTML =
-                '<tr><td colspan="4">Unable to load attendance</td></tr>';
+                '<tr><td colspan="5">Unable to load attendance</td></tr>';
 
             return;
         }
@@ -98,9 +99,14 @@ async function loadRecords() {
                     <td>${x.name}</td>
                     <td>${x.attendance_date}</td>
                     <td>${x.attendance_time}</td>
+                    <td>
+                        <span class="status-present">
+                            Present
+                        </span>
+                    </td>
                 </tr>`
             ).join('') ||
-            '<tr><td colspan="4">No attendance yet</td></tr>';
+            '<tr><td colspan="5">No attendance yet</td></tr>';
 
 
     } catch (error) {
@@ -111,7 +117,148 @@ async function loadRecords() {
         );
 
         records.innerHTML =
-            '<tr><td colspan="4">Unable to load attendance</td></tr>';
+            '<tr><td colspan="5">Unable to load attendance</td></tr>';
+    }
+}
+
+
+// =========================
+// LOAD ATTENDANCE HISTORY
+// =========================
+
+async function loadHistory() {
+
+    try {
+
+        const response =
+            await fetch('/api/history');
+
+        const data =
+            await response.json();
+
+        const historyPanel =
+            document.querySelector('#history');
+
+
+        if (!historyPanel) {
+            return;
+        }
+
+
+        if (data.error) {
+
+            historyPanel.innerHTML = `
+                <div class="panel-header">
+
+                    <div>
+                        <h2>Attendance History</h2>
+                        <p>Recent attendance activity</p>
+                    </div>
+
+                </div>
+
+                <div class="history-message">
+                    Unable to load attendance history.
+                </div>
+            `;
+
+            return;
+        }
+
+
+        if (!data.length) {
+
+            historyPanel.innerHTML = `
+                <div class="panel-header">
+
+                    <div>
+                        <h2>Attendance History</h2>
+                        <p>Recent attendance activity</p>
+                    </div>
+
+                </div>
+
+                <div class="history-message">
+                    📅 No attendance history available.
+                </div>
+            `;
+
+            return;
+        }
+
+
+        historyPanel.innerHTML = `
+            <div class="panel-header">
+
+                <div>
+                    <h2>Attendance History</h2>
+                    <p>Recent attendance activity</p>
+                </div>
+
+            </div>
+
+
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+                            <th>Enrollment ID</th>
+                            <th>Student Name</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Status</th>
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        ${data.map(x => `
+                            <tr>
+
+                                <td>
+                                    ${x.enrollment_id}
+                                </td>
+
+                                <td>
+                                    ${x.name}
+                                </td>
+
+                                <td>
+                                    ${x.attendance_date}
+                                </td>
+
+                                <td>
+                                    ${x.attendance_time}
+                                </td>
+
+                                <td>
+                                    <span class="status-present">
+                                        Present
+                                    </span>
+                                </td>
+
+                            </tr>
+                        `).join('')}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+        `;
+
+    } catch (error) {
+
+        console.error(
+            'History loading error:',
+            error
+        );
+
     }
 }
 
@@ -282,11 +429,15 @@ async function recognize() {
             }
 
 
-            // Refresh attendance table
+            // Refresh today's attendance
             await loadRecords();
 
 
-            // Refresh dashboard statistics
+            // Refresh history
+            await loadHistory();
+
+
+            // Refresh dashboard
             await loadDashboard();
 
 
@@ -394,6 +545,7 @@ if (searchInput) {
                     )
                         ? ''
                         : 'none';
+
             });
 
         }
@@ -408,8 +560,11 @@ if (searchInput) {
 // Start camera
 startCamera();
 
-// Load attendance
+// Load today's attendance
 loadRecords();
 
 // Load dashboard statistics
 loadDashboard();
+
+// Load attendance history
+loadHistory();
