@@ -115,14 +115,31 @@ def students_page():
 
 
 # ==========================================
+# ATTENDANCE MANAGEMENT PAGE
+# ==========================================
+
+@app.get("/attendance")
+def attendance_page():
+    return render_template("attendance.html")
+
+
+# ==========================================
 # ENROLL STUDENT API
 # ==========================================
 
 @app.post("/api/enroll")
 def enroll_student():
 
-    enrollment_id = request.form.get("enrollment_id", "").strip()
-    name = request.form.get("name", "").strip()
+    enrollment_id = request.form.get(
+        "enrollment_id",
+        ""
+    ).strip()
+
+    name = request.form.get(
+        "name",
+        ""
+    ).strip()
+
     image = request.files.get("image")
 
     if not enrollment_id:
@@ -143,7 +160,6 @@ def enroll_student():
             "message": "Student image is required"
         }), 400
 
-    # Read image
     image_bytes = image.read()
 
     if not image_bytes:
@@ -152,9 +168,15 @@ def enroll_student():
             "message": "Invalid image"
         }), 400
 
-    # Convert image
-    image_array = np.frombuffer(image_bytes, np.uint8)
-    frame = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
+    image_array = np.frombuffer(
+        image_bytes,
+        np.uint8
+    )
+
+    frame = cv2.imdecode(
+        image_array,
+        cv2.IMREAD_COLOR
+    )
 
     if frame is None:
         return jsonify({
@@ -162,11 +184,14 @@ def enroll_student():
             "message": "Could not read image"
         }), 400
 
-    # Convert BGR -> RGB
-    rgb_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    rgb_image = cv2.cvtColor(
+        frame,
+        cv2.COLOR_BGR2RGB
+    )
 
-    # Detect faces
-    face_locations = face_recognition.face_locations(rgb_image)
+    face_locations = face_recognition.face_locations(
+        rgb_image
+    )
 
     if len(face_locations) == 0:
         return jsonify({
@@ -180,7 +205,6 @@ def enroll_student():
             "message": "Please upload an image containing only one face"
         }), 400
 
-    # Generate face encoding
     encodings = face_recognition.face_encodings(
         rgb_image,
         face_locations
@@ -194,7 +218,6 @@ def enroll_student():
 
     face_encoding = encodings[0]
 
-    # Save to database
     conn = connection()
     cur = conn.cursor()
 
@@ -212,6 +235,7 @@ def enroll_student():
         existing = cur.fetchone()
 
         if existing:
+
             cur.close()
             conn.close()
 
@@ -237,7 +261,9 @@ def enroll_student():
                 name,
                 "",
                 psycopg2.Binary(image_bytes),
-                psycopg2.Binary(pickle.dumps(face_encoding))
+                psycopg2.Binary(
+                    pickle.dumps(face_encoding)
+                )
             )
         )
 
@@ -272,7 +298,10 @@ def enroll_student():
 def get_students():
 
     conn = connection()
-    cur = conn.cursor(cursor_factory=RealDictCursor)
+
+    cur = conn.cursor(
+        cursor_factory=RealDictCursor
+    )
 
     cur.execute("""
         SELECT
@@ -339,7 +368,6 @@ def delete_student(enrollment_id):
 
     try:
 
-        # Delete attendance first
         cur.execute(
             """
             DELETE FROM attendance
@@ -348,7 +376,6 @@ def delete_student(enrollment_id):
             (enrollment_id,)
         )
 
-        # Delete student
         cur.execute(
             """
             DELETE FROM students
@@ -409,7 +436,10 @@ def recognize():
 
     image_bytes = image.read()
 
-    image_array = np.frombuffer(image_bytes, np.uint8)
+    image_array = np.frombuffer(
+        image_bytes,
+        np.uint8
+    )
 
     frame = cv2.imdecode(
         image_array,
@@ -437,13 +467,11 @@ def recognize():
     )
 
     if not face_encodings:
-
         return jsonify({
             "success": False,
             "message": "No face detected"
         })
 
-    # Get students
     conn = connection()
     cur = conn.cursor()
 
@@ -481,6 +509,7 @@ def recognize():
             if distance < best_distance:
 
                 best_distance = distance
+
                 best_student = (
                     enrollment_id,
                     name
@@ -573,7 +602,6 @@ def dashboard():
 
     today = india_now().strftime("%Y-%m-%d")
 
-    # Total students
     cur.execute("""
         SELECT COUNT(*)
         FROM students
@@ -581,7 +609,6 @@ def dashboard():
 
     total_students = cur.fetchone()[0]
 
-    # Present today
     cur.execute(
         """
         SELECT COUNT(*)
@@ -593,19 +620,20 @@ def dashboard():
 
     present_today = cur.fetchone()[0]
 
-    # Absent
     absent_today = max(
         total_students - present_today,
         0
     )
 
-    # Attendance rate
     if total_students > 0:
+
         attendance_rate = round(
             (present_today / total_students) * 100,
             2
         )
+
     else:
+
         attendance_rate = 0
 
     cur.close()
@@ -621,13 +649,14 @@ def dashboard():
 
 
 # ==========================================
-# TODAY ATTENDANCE
+# TODAY ATTENDANCE API
 # ==========================================
 
 @app.get("/api/attendance")
-def attendance():
+def attendance_api():
 
     conn = connection()
+
     cur = conn.cursor(
         cursor_factory=RealDictCursor
     )
@@ -664,6 +693,97 @@ def attendance():
 
 
 # ==========================================
+# ATTENDANCE MANAGEMENT API
+# ==========================================
+
+@app.get("/api/attendance-management")
+def attendance_management():
+
+    try:
+
+        requested_date = request.args.get(
+            "date",
+            ""
+        ).strip()
+
+        if requested_date:
+
+            try:
+
+                selected_date = datetime.strptime(
+                    requested_date,
+                    "%Y-%m-%d"
+                ).strftime("%Y-%m-%d")
+
+            except ValueError:
+
+                return jsonify({
+                    "success": False,
+                    "message": "Invalid date format"
+                }), 400
+
+        else:
+
+            selected_date = india_now().strftime(
+                "%Y-%m-%d"
+            )
+
+        conn = connection()
+
+        cur = conn.cursor(
+            cursor_factory=RealDictCursor
+        )
+
+        cur.execute(
+            """
+            SELECT
+                s.enrollment_id,
+                s.name,
+                a.attendance_date AS date,
+                a.attendance_time AS time,
+
+                CASE
+                    WHEN a.enrollment_id IS NOT NULL
+                    THEN 'Present'
+                    ELSE 'Absent'
+                END AS status
+
+            FROM students s
+
+            LEFT JOIN attendance a
+                ON s.enrollment_id = a.enrollment_id
+                AND a.attendance_date = %s
+
+            ORDER BY s.name ASC
+            """,
+            (selected_date,)
+        )
+
+        records = cur.fetchall()
+
+        cur.close()
+        conn.close()
+
+        return jsonify({
+            "success": True,
+            "date": selected_date,
+            "attendance": records
+        })
+
+    except Exception as e:
+
+        print(
+            "Attendance management error:",
+            e
+        )
+
+        return jsonify({
+            "success": False,
+            "message": "Unable to load attendance management data"
+        }), 500
+
+
+# ==========================================
 # ATTENDANCE HISTORY
 # ==========================================
 
@@ -671,6 +791,7 @@ def attendance():
 def history():
 
     conn = connection()
+
     cur = conn.cursor(
         cursor_factory=RealDictCursor
     )
@@ -711,6 +832,11 @@ if __name__ == "__main__":
 
     app.run(
         host="0.0.0.0",
-        port=int(os.environ.get("PORT", 5000)),
+        port=int(
+            os.environ.get(
+                "PORT",
+                5000
+            )
+        ),
         debug=True
     )
