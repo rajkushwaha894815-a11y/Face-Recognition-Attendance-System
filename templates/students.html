@@ -1,777 +1,1300 @@
-```html
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Students Management</title>
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+```
+<title>Students Management | FaceAttend</title>
 
-    <style>
-        .students-page {
-            padding: 25px;
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        background: #f5f7fb;
+        color: #1f2937;
+    }
+
+    .students-page {
+        padding: 28px;
+    }
+
+    /* Header */
+
+    .students-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 25px;
+        flex-wrap: wrap;
+    }
+
+    .students-header h1 {
+        margin: 0;
+        font-size: 30px;
+    }
+
+    .students-header p {
+        margin: 7px 0 0;
+        color: #6b7280;
+    }
+
+    .add-student-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 12px 20px;
+        background: #2563eb;
+        color: white;
+        text-decoration: none;
+        border-radius: 9px;
+        font-weight: 600;
+        transition: 0.2s;
+    }
+
+    .add-student-btn:hover {
+        background: #1d4ed8;
+        transform: translateY(-1px);
+    }
+
+    /* Summary Cards */
+
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+        margin-bottom: 25px;
+    }
+
+    .summary-card {
+        background: white;
+        padding: 22px;
+        border-radius: 14px;
+        box-shadow: 0 3px 15px rgba(0, 0, 0, 0.06);
+        border: 1px solid #eef0f4;
+    }
+
+    .summary-label {
+        color: #6b7280;
+        font-size: 13px;
+        margin-bottom: 8px;
+    }
+
+    .summary-value {
+        font-size: 28px;
+        font-weight: 700;
+    }
+
+    .summary-blue {
+        color: #2563eb;
+    }
+
+    .summary-green {
+        color: #16a34a;
+    }
+
+    .summary-purple {
+        color: #7c3aed;
+    }
+
+    /* Main Card */
+
+    .students-card {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 3px 15px rgba(0, 0, 0, 0.06);
+    }
+
+    .students-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+
+    .toolbar-title h2 {
+        margin: 0;
+        font-size: 21px;
+    }
+
+    .toolbar-title p {
+        margin: 5px 0 0;
+        color: #6b7280;
+        font-size: 13px;
+    }
+
+    .toolbar-actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .search-box {
+        width: 300px;
+        max-width: 100%;
+        padding: 11px 14px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        outline: none;
+        font-size: 14px;
+    }
+
+    .search-box:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .refresh-btn {
+        border: none;
+        padding: 11px 15px;
+        border-radius: 8px;
+        background: #eff6ff;
+        color: #1d4ed8;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .refresh-btn:hover {
+        background: #dbeafe;
+    }
+
+    /* Table */
+
+    .students-table-wrapper {
+        overflow-x: auto;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+    }
+
+    .students-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 850px;
+    }
+
+    .students-table th {
+        background: #f8fafc;
+        color: #475569;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        text-align: left;
+        padding: 15px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .students-table td {
+        padding: 15px;
+        border-bottom: 1px solid #e5e7eb;
+        vertical-align: middle;
+    }
+
+    .students-table tbody tr {
+        transition: 0.15s;
+    }
+
+    .students-table tbody tr:hover {
+        background: #f8fafc;
+    }
+
+    .students-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Student */
+
+    .student-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .student-photo {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #e5e7eb;
+        background: #f1f5f9;
+    }
+
+    .student-photo-fallback {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #dbeafe;
+        color: #1d4ed8;
+        font-size: 20px;
+        font-weight: bold;
+    }
+
+    .student-name {
+        font-weight: 700;
+        color: #111827;
+    }
+
+    .student-label {
+        margin-top: 3px;
+        font-size: 12px;
+        color: #9ca3af;
+    }
+
+    .enrollment-id {
+        color: #2563eb;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    /* Status */
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 11px;
+        border-radius: 20px;
+        background: #dcfce7;
+        color: #15803d;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .status-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #16a34a;
+    }
+
+    /* Actions */
+
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .view-btn,
+    .delete-btn {
+        border: none;
+        padding: 8px 12px;
+        border-radius: 7px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 12px;
+        transition: 0.2s;
+    }
+
+    .view-btn {
+        background: #dbeafe;
+        color: #1d4ed8;
+    }
+
+    .view-btn:hover {
+        background: #bfdbfe;
+    }
+
+    .delete-btn {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+    .delete-btn:hover {
+        background: #fecaca;
+    }
+
+    /* Empty / Loading */
+
+    .empty-state {
+        text-align: center;
+        padding: 50px 20px !important;
+        color: #6b7280;
+    }
+
+    .empty-icon {
+        font-size: 40px;
+        margin-bottom: 10px;
+    }
+
+    .empty-state h3 {
+        margin: 0 0 7px;
+        color: #374151;
+    }
+
+    .empty-state p {
+        margin: 0;
+        font-size: 14px;
+    }
+
+    .loading {
+        text-align: center;
+        padding: 40px !important;
+        color: #6b7280;
+    }
+
+    /* Bottom */
+
+    .table-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 18px;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .record-count {
+        color: #6b7280;
+        font-size: 13px;
+    }
+
+    .dashboard-btn {
+        display: inline-block;
+        padding: 10px 17px;
+        background: #111827;
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .dashboard-btn:hover {
+        background: #374151;
+    }
+
+    /* Developer Footer */
+
+    .developer-footer {
+        text-align: center;
+        padding: 25px 10px;
+        color: #9ca3af;
+        font-size: 12px;
+    }
+
+    .developer-footer strong {
+        color: #2563eb;
+    }
+
+    /* Responsive */
+
+    @media (max-width: 1000px) {
+
+        .summary-grid {
+            grid-template-columns: 1fr 1fr;
         }
+    }
 
-        .students-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            gap: 15px;
-            flex-wrap: wrap;
+    @media (max-width: 700px) {
+
+        .students-page {
+            padding: 15px;
         }
 
         .students-header h1 {
-            margin: 0;
-            font-size: 28px;
+            font-size: 24px;
         }
 
-        .students-header p {
-            margin-top: 6px;
-            color: #777;
-        }
-
-        .add-student-btn {
-            background: #2563eb;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .add-student-btn:hover {
-            background: #1d4ed8;
-        }
-
-        .student-summary {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
-        }
-
-        .summary-title {
-            color: #777;
-            font-size: 14px;
-        }
-
-        .summary-number {
-            font-size: 30px;
-            font-weight: 700;
-            margin-top: 5px;
+        .summary-grid {
+            grid-template-columns: 1fr;
         }
 
         .students-card {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+            padding: 17px;
         }
 
-        .students-toolbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-
-        .students-toolbar h2 {
-            margin: 0;
-            font-size: 20px;
+        .toolbar-actions {
+            width: 100%;
         }
 
         .search-box {
-            width: 280px;
-            max-width: 100%;
-            padding: 11px 14px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            outline: none;
-            font-size: 14px;
-        }
-
-        .search-box:focus {
-            border-color: #2563eb;
-        }
-
-        .students-table-wrapper {
-            overflow-x: auto;
-        }
-
-        .students-table {
             width: 100%;
-            border-collapse: collapse;
         }
 
-        .students-table th {
-            background: #f8fafc;
-            color: #555;
-            font-size: 13px;
-            text-align: left;
-            padding: 14px;
-            border-bottom: 1px solid #eee;
+        .refresh-btn {
+            width: 100%;
         }
 
-        .students-table td {
-            padding: 14px;
-            border-bottom: 1px solid #eee;
-            vertical-align: middle;
+        .table-footer {
+            align-items: stretch;
         }
 
-        .student-photo {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid #e5e7eb;
-        }
-
-        .student-name {
-            font-weight: 600;
-        }
-
-        .enrollment-id {
-            color: #555;
-            font-size: 14px;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 6px 10px;
-            border-radius: 20px;
-            background: #dcfce7;
-            color: #166534;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .view-btn {
-            border: none;
-            background: #dbeafe;
-            color: #1d4ed8;
-            padding: 8px 12px;
-            border-radius: 7px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-
-        .view-btn:hover {
-            background: #bfdbfe;
-        }
-
-        .delete-btn {
-            border: none;
-            background: #fee2e2;
-            color: #dc2626;
-            padding: 8px 12px;
-            border-radius: 7px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-
-        .delete-btn:hover {
-            background: #fecaca;
-        }
-
-        .empty-state {
+        .dashboard-btn {
             text-align: center;
-            padding: 45px 20px;
-            color: #777;
         }
+    }
+</style>
+```
 
-        .empty-state h3 {
-            margin-bottom: 8px;
-            color: #444;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 35px;
-            color: #777;
-        }
-
-        /* DEVELOPER FOOTER */
-        .developer-footer {
-            text-align: center;
-            padding: 20px;
-            margin-top: 10px;
-            color: #777;
-            font-size: 13px;
-        }
-
-        .developer-footer strong {
-            color: #2563eb;
-            font-weight: 700;
-        }
-
-        @media (max-width: 768px) {
-            .students-page {
-                padding: 15px;
-            }
-
-            .students-header h1 {
-                font-size: 23px;
-            }
-
-            .search-box {
-                width: 100%;
-            }
-        }
-    </style>
 </head>
 
 <body>
 
 <div class="dashboard-container">
 
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
+```
+<!-- SIDEBAR -->
 
-        <div class="logo">
-            <h2>Face Attendance</h2>
+<aside class="sidebar">
+
+    <div class="logo">
+        <h2>Face Attendance</h2>
+    </div>
+
+    <nav>
+
+        <a href="/" class="nav-item">
+            Dashboard
+        </a>
+
+        <a href="/students" class="nav-item active">
+            Students
+        </a>
+
+        <a href="/enroll" class="nav-item">
+            Add Student
+        </a>
+
+        <a href="/attendance" class="nav-item">
+            Attendance
+        </a>
+
+        <a href="/#history" class="nav-item">
+            History
+        </a>
+
+    </nav>
+
+    <div class="admin-box">
+        <strong>Admin</strong>
+        <span>Attendance System</span>
+    </div>
+
+</aside>
+
+
+<!-- MAIN CONTENT -->
+
+<main class="main-content">
+
+    <!-- TOP BAR -->
+
+    <header class="topbar">
+
+        <div>
+            <h2>Students Management</h2>
         </div>
 
-        <nav>
+        <div id="currentDate"></div>
 
-            <a href="/" class="nav-item">
-                Dashboard
-            </a>
-
-            <a href="/students" class="nav-item active">
-                Students
-            </a>
-
-            <a href="/enroll" class="nav-item">
-                Add Student
-            </a>
-
-            <a href="/#attendance" class="nav-item">
-                Attendance
-            </a>
-
-            <a href="/#history" class="nav-item">
-                History
-            </a>
-
-        </nav>
-
-        <div class="admin-box">
-            <strong>Admin</strong>
-            <span>Attendance System</span>
-        </div>
-
-    </aside>
+    </header>
 
 
-    <!-- MAIN CONTENT -->
-    <main class="main-content">
+    <!-- PAGE -->
 
-        <!-- TOP BAR -->
-        <header class="topbar">
+    <section class="students-page">
+
+        <!-- PAGE HEADER -->
+
+        <div class="students-header">
 
             <div>
-                <h2>Students Management</h2>
-            </div>
 
-            <div id="currentDate"></div>
+                <h1>Students</h1>
 
-        </header>
-
-
-        <!-- PAGE -->
-        <section class="students-page">
-
-            <!-- HEADER -->
-            <div class="students-header">
-
-                <div>
-
-                    <h1>Students</h1>
-
-                    <p>
-                        Manage all registered students
-                    </p>
-
-                </div>
-
-                <a href="/enroll" class="add-student-btn">
-                    + Add Student
-                </a>
+                <p>
+                    Manage all registered students
+                </p>
 
             </div>
 
+            <a
+                href="/enroll"
+                class="add-student-btn"
+            >
+                + Add Student
+            </a>
 
-            <!-- SUMMARY -->
-            <div class="student-summary">
+        </div>
 
-                <div class="summary-title">
-                    Total Registered Students
+
+        <!-- SUMMARY -->
+
+        <div class="summary-grid">
+
+            <div class="summary-card">
+
+                <div class="summary-label">
+                    Total Registered
                 </div>
 
-                <div class="summary-number" id="totalStudents">
+                <div
+                    class="summary-value summary-blue"
+                    id="totalStudents"
+                >
                     0
                 </div>
 
             </div>
 
 
-            <!-- STUDENTS TABLE -->
-            <div class="students-card">
+            <div class="summary-card">
 
-                <div class="students-toolbar">
+                <div class="summary-label">
+                    Active Students
+                </div>
+
+                <div
+                    class="summary-value summary-green"
+                    id="activeStudents"
+                >
+                    0
+                </div>
+
+            </div>
+
+
+            <div class="summary-card">
+
+                <div class="summary-label">
+                    Search Results
+                </div>
+
+                <div
+                    class="summary-value summary-purple"
+                    id="searchResults"
+                >
+                    0
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- STUDENTS CARD -->
+
+        <div class="students-card">
+
+            <div class="students-toolbar">
+
+                <div class="toolbar-title">
 
                     <h2>
                         Student List
                     </h2>
 
-                    <input
-                        type="text"
-                        id="searchInput"
-                        class="search-box"
-                        placeholder="Search by name or enrollment ID..."
-                    >
+                    <p>
+                        All students registered in the system
+                    </p>
 
                 </div>
 
 
-                <div class="students-table-wrapper">
+                <div class="toolbar-actions">
 
-                    <table class="students-table">
+                    <input
+                        type="text"
+                        id="searchInput"
+                        class="search-box"
+                        placeholder="🔍 Search by name or enrollment ID..."
+                    >
 
-                        <thead>
-
-                            <tr>
-
-                                <th>
-                                    Photo
-                                </th>
-
-                                <th>
-                                    Enrollment ID
-                                </th>
-
-                                <th>
-                                    Student Name
-                                </th>
-
-                                <th>
-                                    Status
-                                </th>
-
-                                <th>
-                                    Action
-                                </th>
-
-                            </tr>
-
-                        </thead>
-
-
-                        <tbody id="studentsTableBody">
-
-                            <tr>
-
-                                <td
-                                    colspan="5"
-                                    class="loading"
-                                >
-                                    Loading students...
-                                </td>
-
-                            </tr>
-
-                        </tbody>
-
-                    </table>
+                    <button
+                        class="refresh-btn"
+                        onclick="loadStudents()"
+                    >
+                        ↻ Refresh
+                    </button>
 
                 </div>
 
             </div>
 
-        </section>
+
+            <!-- TABLE -->
+
+            <div class="students-table-wrapper">
+
+                <table class="students-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Student
+                            </th>
+
+                            <th>
+                                Enrollment ID
+                            </th>
+
+                            <th>
+                                Status
+                            </th>
+
+                            <th>
+                                Action
+                            </th>
+
+                        </tr>
+
+                    </thead>
 
 
-        <!-- DEVELOPER CREDIT -->
-        <footer class="developer-footer">
+                    <tbody id="studentsTableBody">
 
-            <p>
-                MADE BY
-                <strong>RAJ KUSHWAHA</strong>
-            </p>
+                        <tr>
 
-        </footer>
+                            <td
+                                colspan="4"
+                                class="loading"
+                            >
+                                Loading students...
+                            </td>
 
-    </main>
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            <!-- TABLE FOOTER -->
+
+            <div class="table-footer">
+
+                <span
+                    class="record-count"
+                    id="recordCount"
+                >
+                    0 students
+                </span>
+
+                <a
+                    href="/"
+                    class="dashboard-btn"
+                >
+                    ← Back to Dashboard
+                </a>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- FOOTER -->
+
+    <footer class="developer-footer">
+
+        MADE BY
+        <strong>RAJ KUSHWAHA</strong>
+
+    </footer>
+
+</main>
+```
 
 </div>
 
-
 <script>
 
-let allStudents = [];
+    let allStudents = [];
 
 
-// ==========================================
-// LOAD STUDENTS
-// ==========================================
+    // ==========================================
+    // LOAD STUDENTS
+    // ==========================================
 
-async function loadStudents() {
+    async function loadStudents() {
 
-    const tableBody =
-        document.getElementById("studentsTableBody");
+        const tableBody =
+            document.getElementById(
+                "studentsTableBody"
+            );
 
-    try {
 
-        const response =
-            await fetch("/api/students");
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="4" class="loading">
+                    Loading students...
+                </td>
+            </tr>
+        `;
 
-        const data =
-            await response.json();
 
-        if (!data.success) {
+        try {
+
+            const response =
+                await fetch("/api/students");
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "Failed to load students"
+                );
+
+            }
+
+
+            const data =
+                await response.json();
+
+
+            if (!data.success) {
+
+                throw new Error(
+                    data.message ||
+                    "Unable to load students"
+                );
+
+            }
+
+
+            allStudents =
+                data.students || [];
+
+
+            updateSummary(
+                allStudents,
+                allStudents
+            );
+
+
+            displayStudents(
+                allStudents
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                "Students loading error:",
+                error
+            );
+
 
             tableBody.innerHTML = `
                 <tr>
-                    <td colspan="5" class="empty-state">
-                        <h3>Unable to load students</h3>
-                        <p>Please try again.</p>
+
+                    <td
+                        colspan="4"
+                        class="empty-state"
+                    >
+
+                        <div class="empty-icon">
+                            ⚠️
+                        </div>
+
+                        <h3>
+                            Unable to load students
+                        </h3>
+
+                        <p>
+                            Please refresh the page and try again.
+                        </p>
+
                     </td>
+
+                </tr>
+            `;
+
+        }
+
+    }
+
+
+    // ==========================================
+    // UPDATE SUMMARY
+    // ==========================================
+
+    function updateSummary(
+        all,
+        visible
+    ) {
+
+        document.getElementById(
+            "totalStudents"
+        ).textContent =
+            all.length;
+
+
+        document.getElementById(
+            "activeStudents"
+        ).textContent =
+            all.length;
+
+
+        document.getElementById(
+            "searchResults"
+        ).textContent =
+            visible.length;
+
+
+        document.getElementById(
+            "recordCount"
+        ).textContent =
+            `${visible.length} student${
+                visible.length === 1
+                ? ""
+                : "s"
+            }`;
+
+    }
+
+
+    // ==========================================
+    // DISPLAY STUDENTS
+    // ==========================================
+
+    function displayStudents(
+        students
+    ) {
+
+        const tableBody =
+            document.getElementById(
+                "studentsTableBody"
+            );
+
+
+        if (
+            !students ||
+            students.length === 0
+        ) {
+
+            tableBody.innerHTML = `
+                <tr>
+
+                    <td
+                        colspan="4"
+                        class="empty-state"
+                    >
+
+                        <div class="empty-icon">
+                            👨‍🎓
+                        </div>
+
+                        <h3>
+                            No Students Found
+                        </h3>
+
+                        <p>
+                            Add a student to get started.
+                        </p>
+
+                    </td>
+
                 </tr>
             `;
 
             return;
+
         }
 
-        allStudents =
-            data.students || [];
 
-        document.getElementById("totalStudents").textContent =
-            allStudents.length;
+        tableBody.innerHTML =
+            students.map(
+                student => {
 
-        displayStudents(allStudents);
+                    const enrollmentId =
+                        String(
+                            student.enrollment_id || ""
+                        );
 
-    } catch (error) {
 
-        console.error(error);
+                    const name =
+                        String(
+                            student.name || "Unknown"
+                        );
 
-        tableBody.innerHTML = `
-            <tr>
-                <td colspan="5" class="empty-state">
-                    <h3>Something went wrong</h3>
-                    <p>Could not connect to the server.</p>
-                </td>
-            </tr>
-        `;
 
-    }
+                    const photoUrl =
+                        "/api/students/" +
+                        encodeURIComponent(
+                            enrollmentId
+                        ) +
+                        "/photo";
 
-}
 
+                    const firstLetter =
+                        escapeHtml(
+                            name
+                                .charAt(0)
+                                .toUpperCase()
+                        );
 
-// ==========================================
-// DISPLAY STUDENTS
-// ==========================================
 
-function displayStudents(students) {
+                    return `
 
-    const tableBody =
-        document.getElementById("studentsTableBody");
+                        <tr>
 
-    if (students.length === 0) {
+                            <td>
 
-        tableBody.innerHTML = `
-            <tr>
-                <td colspan="5" class="empty-state">
+                                <div class="student-info">
 
-                    <h3>
-                        No Students Found
-                    </h3>
+                                    <img
+                                        src="${photoUrl}"
+                                        class="student-photo"
+                                        alt="${escapeHtml(name)}"
+                                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                                    >
 
-                    <p>
-                        Add your first student to get started.
-                    </p>
+                                    <div
+                                        class="student-photo-fallback"
+                                        style="display:none;"
+                                    >
+                                        ${firstLetter}
+                                    </div>
 
-                </td>
-            </tr>
-        `;
 
-        return;
-    }
+                                    <div>
 
+                                        <div class="student-name">
+                                            ${escapeHtml(name)}
+                                        </div>
 
-    tableBody.innerHTML =
-        students.map(student => {
+                                        <div class="student-label">
+                                            Registered Student
+                                        </div>
 
-            const photoUrl =
-                "/api/students/" +
-                encodeURIComponent(student.enrollment_id) +
-                "/photo";
+                                    </div>
 
+                                </div>
 
-            return `
-                <tr>
+                            </td>
 
-                    <td>
 
-                        <img
-                            src="${photoUrl}"
-                            class="student-photo"
-                            alt="${escapeHtml(student.name)}"
-                            onerror="this.style.display='none'"
-                        >
+                            <td>
 
-                    </td>
+                                <span class="enrollment-id">
+                                    ${escapeHtml(enrollmentId)}
+                                </span>
 
+                            </td>
 
-                    <td>
 
-                        <span class="enrollment-id">
-                            ${escapeHtml(student.enrollment_id)}
-                        </span>
+                            <td>
 
-                    </td>
+                                <span class="status-badge">
 
+                                    <span class="status-dot"></span>
 
-                    <td>
+                                    Active
 
-                        <span class="student-name">
-                            ${escapeHtml(student.name)}
-                        </span>
+                                </span>
 
-                    </td>
+                            </td>
 
 
-                    <td>
+                            <td>
 
-                        <span class="status-badge">
-                            Active
-                        </span>
+                                <div class="action-buttons">
 
-                    </td>
+                                    <button
+                                        class="view-btn"
+                                        onclick="viewAttendance('${escapeJs(enrollmentId)}')"
+                                    >
+                                        View Attendance
+                                    </button>
 
 
-                    <td>
+                                    <button
+                                        class="delete-btn"
+                                        onclick="deleteStudent('${escapeJs(enrollmentId)}')"
+                                    >
+                                        Delete
+                                    </button>
 
-                        <div class="action-buttons">
+                                </div>
 
-                            <button
-                                class="view-btn"
-                                onclick="viewAttendance('${escapeJs(student.enrollment_id)}')"
-                            >
-                                View Attendance
-                            </button>
+                            </td>
 
+                        </tr>
 
-                            <button
-                                class="delete-btn"
-                                onclick="deleteStudent('${escapeJs(student.enrollment_id)}')"
-                            >
-                                Delete
-                            </button>
+                    `;
 
-                        </div>
-
-                    </td>
-
-                </tr>
-            `;
-
-        }).join("");
-
-}
-
-
-// ==========================================
-// SEARCH
-// ==========================================
-
-document
-    .getElementById("searchInput")
-    .addEventListener("input", function() {
-
-        const search =
-            this.value.toLowerCase().trim();
-
-        const filtered =
-            allStudents.filter(student =>
-
-                student.name
-                    .toLowerCase()
-                    .includes(search)
-
-                ||
-
-                student.enrollment_id
-                    .toLowerCase()
-                    .includes(search)
-
-            );
-
-        displayStudents(filtered);
-
-    });
-
-
-// ==========================================
-// VIEW ATTENDANCE
-// ==========================================
-
-function viewAttendance(enrollmentId) {
-
-    window.location.href =
-        "/#history?student=" +
-        encodeURIComponent(enrollmentId);
-
-}
-
-
-// ==========================================
-// DELETE STUDENT
-// ==========================================
-
-async function deleteStudent(enrollmentId) {
-
-    const student =
-        allStudents.find(
-            s => s.enrollment_id === enrollmentId
-        );
-
-    if (!student) {
-        return;
-    }
-
-
-    const confirmed = confirm(
-        `Are you sure you want to delete ${student.name}?
-
-This will also remove their attendance records.`
-    );
-
-
-    if (!confirmed) {
-        return;
-    }
-
-
-    try {
-
-        const response =
-            await fetch(
-                "/api/students/" +
-                encodeURIComponent(enrollmentId),
-                {
-                    method: "DELETE"
                 }
-            );
-
-
-        const data =
-            await response.json();
-
-
-        if (data.success) {
-
-            alert(
-                "Student deleted successfully."
-            );
-
-            loadStudents();
-
-        } else {
-
-            alert(
-                data.message ||
-                "Could not delete student."
-            );
-
-        }
-
-    } catch (error) {
-
-        console.error(error);
-
-        alert(
-            "Server error. Please try again."
-        );
+            ).join("");
 
     }
 
-}
+
+    // ==========================================
+    // SEARCH
+    // ==========================================
+
+    document
+        .getElementById("searchInput")
+        .addEventListener(
+            "input",
+            function () {
+
+                const search =
+                    this.value
+                        .toLowerCase()
+                        .trim();
 
 
-// ==========================================
-// SECURITY HELPERS
-// ==========================================
+                const filtered =
+                    allStudents.filter(
+                        student => {
 
-function escapeHtml(text) {
-
-    const div =
-        document.createElement("div");
-
-    div.textContent = text;
-
-    return div.innerHTML;
-
-}
+                            const name =
+                                String(
+                                    student.name || ""
+                                )
+                                .toLowerCase();
 
 
-function escapeJs(text) {
-
-    return String(text)
-        .replace(/\\/g, "\\\\")
-        .replace(/'/g, "\\'");
-
-}
+                            const enrollmentId =
+                                String(
+                                    student.enrollment_id || ""
+                                )
+                                .toLowerCase();
 
 
-// ==========================================
-// DATE
-// ==========================================
+                            return (
+                                name.includes(search) ||
+                                enrollmentId.includes(search)
+                            );
 
-function updateDate() {
+                        }
+                    );
 
-    const now =
-        new Date();
 
-    document.getElementById(
-        "currentDate"
-    ).textContent =
+                updateSummary(
+                    allStudents,
+                    filtered
+                );
 
-        now.toLocaleDateString(
-            "en-IN",
-            {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric"
+
+                displayStudents(
+                    filtered
+                );
+
             }
         );
 
-}
+
+    // ==========================================
+    // VIEW ATTENDANCE
+    // ==========================================
+
+    function viewAttendance(
+        enrollmentId
+    ) {
+
+        window.location.href =
+            "/attendance?student=" +
+            encodeURIComponent(
+                enrollmentId
+            );
+
+    }
 
 
-// ==========================================
-// START
-// ==========================================
+    // ==========================================
+    // DELETE STUDENT
+    // ==========================================
 
-updateDate();
+    async function deleteStudent(
+        enrollmentId
+    ) {
 
-loadStudents();
+        const student =
+            allStudents.find(
+                item =>
+                    String(
+                        item.enrollment_id
+                    ) ===
+                    String(
+                        enrollmentId
+                    )
+            );
+
+
+        if (!student) {
+
+            return;
+
+        }
+
+
+        const confirmed =
+            confirm(
+                `Are you sure you want to delete ${student.name}?\n\nThis will also remove their attendance records.`
+            );
+
+
+        if (!confirmed) {
+
+            return;
+
+        }
+
+
+        try {
+
+            const response =
+                await fetch(
+                    "/api/students/" +
+                    encodeURIComponent(
+                        enrollmentId
+                    ),
+                    {
+                        method: "DELETE"
+                    }
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (data.success) {
+
+                alert(
+                    "Student deleted successfully."
+                );
+
+
+                await loadStudents();
+
+
+            } else {
+
+                alert(
+                    data.message ||
+                    "Could not delete student."
+                );
+
+            }
+
+
+        } catch (error) {
+
+            console.error(
+                "Delete error:",
+                error
+            );
+
+
+            alert(
+                "Server error. Please try again."
+            );
+
+        }
+
+    }
+
+
+    // ==========================================
+    // SECURITY HELPERS
+    // ==========================================
+
+    function escapeHtml(
+        text
+    ) {
+
+        const div =
+            document.createElement(
+                "div"
+            );
+
+
+        div.textContent =
+            text ?? "";
+
+
+        return div.innerHTML;
+
+    }
+
+
+    function escapeJs(
+        text
+    ) {
+
+        return String(
+            text ?? ""
+        )
+        .replace(
+            /\\/g,
+            "\\\\"
+        )
+        .replace(
+            /'/g,
+            "\\'"
+        )
+        .replace(
+            /\r/g,
+            "\\r"
+        )
+        .replace(
+            /\n/g,
+            "\\n"
+        );
+
+    }
+
+
+    // ==========================================
+    // DATE
+    // ==========================================
+
+    function updateDate() {
+
+        const now =
+            new Date();
+
+
+        document.getElementById(
+            "currentDate"
+        ).textContent =
+            now.toLocaleDateString(
+                "en-IN",
+                {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric"
+                }
+            );
+
+    }
+
+
+    // ==========================================
+    // START
+    // ==========================================
+
+    updateDate();
+
+    loadStudents();
 
 </script>
 
 </body>
 </html>
-```
