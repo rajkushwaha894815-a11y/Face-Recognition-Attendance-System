@@ -45,6 +45,55 @@
             padding: 30px;
         }
 
+        /* Selected Student */
+
+        .student-banner {
+            display: none;
+            background: white;
+            border-radius: 15px;
+            padding: 20px 24px;
+            margin-bottom: 22px;
+            box-shadow: 0 3px 15px rgba(0, 0, 0, 0.06);
+            border-left: 5px solid #2563eb;
+        }
+
+        .student-banner.active {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .student-banner h2 {
+            margin: 0 0 5px;
+            font-size: 21px;
+        }
+
+        .student-banner p {
+            margin: 0;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .student-id {
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        .back-students {
+            text-decoration: none;
+            background: #111827;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .back-students:hover {
+            background: #374151;
+        }
+
         /* Statistics */
 
         .stats {
@@ -236,7 +285,7 @@
             color: #6b7280;
         }
 
-        /* Footer buttons */
+        /* Footer */
 
         .bottom-actions {
             display: flex;
@@ -312,6 +361,10 @@
             .refresh-btn {
                 width: 100%;
             }
+
+            .student-banner.active {
+                align-items: flex-start;
+            }
         }
     </style>
 </head>
@@ -330,34 +383,81 @@
 
     <div class="container">
 
+        <!-- Selected Student Banner -->
+
+        <div class="student-banner" id="studentBanner">
+
+            <div>
+                <h2 id="selectedStudentName">
+                    Student Attendance
+                </h2>
+
+                <p>
+                    Enrollment ID:
+                    <span
+                        class="student-id"
+                        id="selectedStudentId"
+                    ></span>
+                </p>
+            </div>
+
+            <a
+                href="/students"
+                class="back-students"
+            >
+                ← Back to Students
+            </a>
+
+        </div>
+
+
         <!-- Statistics -->
 
         <div class="stats">
 
             <div class="stat-card">
                 <div class="stat-title">Total Students</div>
-                <div class="stat-number total" id="totalStudents">
+
+                <div
+                    class="stat-number total"
+                    id="totalStudents"
+                >
                     0
                 </div>
             </div>
+
 
             <div class="stat-card">
                 <div class="stat-title">Present</div>
-                <div class="stat-number present" id="presentStudents">
+
+                <div
+                    class="stat-number present"
+                    id="presentStudents"
+                >
                     0
                 </div>
             </div>
+
 
             <div class="stat-card">
                 <div class="stat-title">Absent</div>
-                <div class="stat-number absent" id="absentStudents">
+
+                <div
+                    class="stat-number absent"
+                    id="absentStudents"
+                >
                     0
                 </div>
             </div>
 
+
             <div class="stat-card">
                 <div class="stat-title">Attendance Rate</div>
-                <div class="stat-number percentage" id="attendanceRate">
+
+                <div
+                    class="stat-number percentage"
+                    id="attendanceRate"
+                >
                     0%
                 </div>
             </div>
@@ -372,12 +472,17 @@
             <div class="top-row">
 
                 <div class="title-section">
-                    <h2>Attendance Records</h2>
+
+                    <h2 id="tableTitle">
+                        Attendance Records
+                    </h2>
 
                     <p id="selectedDateText">
                         Today's attendance
                     </p>
+
                 </div>
+
 
                 <div class="filters">
 
@@ -411,6 +516,7 @@
                 <table>
 
                     <thead>
+
                         <tr>
                             <th>Enrollment ID</th>
                             <th>Student Name</th>
@@ -418,12 +524,17 @@
                             <th>Time</th>
                             <th>Status</th>
                         </tr>
+
                     </thead>
+
 
                     <tbody id="attendanceTable">
 
                         <tr>
-                            <td colspan="5" class="loading">
+                            <td
+                                colspan="5"
+                                class="loading"
+                            >
                                 Loading attendance...
                             </td>
                         </tr>
@@ -444,7 +555,11 @@
                     0 students
                 </span>
 
-                <a href="/" class="back-btn">
+
+                <a
+                    href="/"
+                    class="back-btn"
+                >
                     ← Back to Dashboard
                 </a>
 
@@ -459,21 +574,42 @@
 
         let attendanceData = [];
 
+        /*
+         * Check whether this page was opened
+         * from Students -> View Attendance
+         *
+         * Example:
+         * /attendance?student=STU001
+         */
+
+        const urlParams =
+            new URLSearchParams(
+                window.location.search
+            );
+
+        const selectedStudent =
+            urlParams.get("student");
+
 
         // Set today's date
+
         function setTodayDate() {
 
-            const today = new Date();
+            const today =
+                new Date();
 
-            const year = today.getFullYear();
+            const year =
+                today.getFullYear();
 
-            const month = String(
-                today.getMonth() + 1
-            ).padStart(2, "0");
+            const month =
+                String(
+                    today.getMonth() + 1
+                ).padStart(2, "0");
 
-            const day = String(
-                today.getDate()
-            ).padStart(2, "0");
+            const day =
+                String(
+                    today.getDate()
+                ).padStart(2, "0");
 
             const todayString =
                 `${year}-${month}-${day}`;
@@ -485,7 +621,101 @@
         }
 
 
+        // Show selected student information
+
+        async function loadSelectedStudentInfo() {
+
+            if (!selectedStudent) {
+                return;
+            }
+
+            const banner =
+                document.getElementById(
+                    "studentBanner"
+                );
+
+            const nameElement =
+                document.getElementById(
+                    "selectedStudentName"
+                );
+
+            const idElement =
+                document.getElementById(
+                    "selectedStudentId"
+                );
+
+            const title =
+                document.getElementById(
+                    "tableTitle"
+                );
+
+            banner.classList.add("active");
+
+            idElement.textContent =
+                selectedStudent;
+
+            title.textContent =
+                "Student Attendance";
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/students"
+                    );
+
+                if (!response.ok) {
+                    return;
+                }
+
+                const result =
+                    await response.json();
+
+                const students =
+                    Array.isArray(result)
+                    ? result
+                    : result.students || [];
+
+                const student =
+                    students.find(
+                        item =>
+                            String(
+                                item.enrollment_id
+                            ) ===
+                            String(
+                                selectedStudent
+                            )
+                    );
+
+                if (student) {
+
+                    nameElement.textContent =
+                        student.name ||
+                        "Student Attendance";
+
+                } else {
+
+                    nameElement.textContent =
+                        "Student Attendance";
+
+                }
+
+            } catch (error) {
+
+                console.error(
+                    "Student info error:",
+                    error
+                );
+
+                nameElement.textContent =
+                    "Student Attendance";
+            }
+
+        }
+
+
         // Load attendance
+
         async function loadAttendance() {
 
             const date =
@@ -509,37 +739,116 @@
 
             try {
 
-                const url =
-                    date
-                    ? `/api/attendance-management?date=${encodeURIComponent(date)}`
-                    : `/api/attendance-management`;
+                let records = [];
 
 
-                const response =
-                    await fetch(url);
+                /*
+                 * If a student is selected,
+                 * load complete attendance history.
+                 */
+
+                if (selectedStudent) {
+
+                    const response =
+                        await fetch(
+                            "/api/history"
+                        );
+
+                    if (!response.ok) {
+                        throw new Error(
+                            "Failed to load student attendance"
+                        );
+                    }
+
+                    const result =
+                        await response.json();
+
+                    if (!result.success) {
+                        throw new Error(
+                            result.message ||
+                            "Unable to load attendance"
+                        );
+                    }
+
+                    const history =
+                        result.history || [];
+
+                    records =
+                        history.filter(
+                            record =>
+                                String(
+                                    record.enrollment_id
+                                ) ===
+                                String(
+                                    selectedStudent
+                                )
+                        );
 
 
-                if (!response.ok) {
-                    throw new Error(
-                        "Failed to load attendance"
-                    );
-                }
+                    /*
+                     * If a date is selected,
+                     * filter that student's history.
+                     */
+
+                    if (date) {
+
+                        records =
+                            records.filter(
+                                record =>
+                                    String(
+                                        record.date ||
+                                        record.attendance_date ||
+                                        ""
+                                    ) ===
+                                    String(date)
+                            );
+
+                    }
+
+                } else {
+
+                    /*
+                     * Normal Attendance Management:
+                     * show all students for selected date.
+                     */
+
+                    const url =
+                        date
+                        ? `/api/attendance-management?date=${encodeURIComponent(date)}`
+                        : `/api/attendance-management`;
 
 
-                const result =
-                    await response.json();
+                    const response =
+                        await fetch(url);
 
 
-                if (!result.success) {
-                    throw new Error(
-                        result.message ||
-                        "Unable to load attendance"
-                    );
+                    if (!response.ok) {
+                        throw new Error(
+                            "Failed to load attendance"
+                        );
+                    }
+
+
+                    const result =
+                        await response.json();
+
+
+                    if (!result.success) {
+                        throw new Error(
+                            result.message ||
+                            "Unable to load attendance"
+                        );
+                    }
+
+
+                    records =
+                        result.attendance || [];
+
                 }
 
 
                 attendanceData =
-                    result.attendance || [];
+                    records;
 
 
                 updateStatistics(
@@ -552,7 +861,9 @@
                 );
 
 
-                updateDateText(date);
+                updateDateText(
+                    date
+                );
 
 
             } catch (error) {
@@ -565,7 +876,10 @@
 
                 table.innerHTML = `
                     <tr>
-                        <td colspan="5" class="empty">
+                        <td
+                            colspan="5"
+                            class="empty"
+                        >
                             Unable to load attendance records.
                         </td>
                     </tr>
@@ -577,6 +891,7 @@
 
 
         // Statistics
+
         function updateStatistics(data) {
 
             const total =
@@ -586,8 +901,10 @@
             const present =
                 data.filter(
                     record =>
-                        String(record.status)
-                            .toLowerCase() === "present"
+                        String(
+                            record.status || ""
+                        ).toLowerCase() ===
+                        "present"
                 ).length;
 
 
@@ -605,33 +922,38 @@
 
             document.getElementById(
                 "totalStudents"
-            ).textContent = total;
+            ).textContent =
+                total;
 
 
             document.getElementById(
                 "presentStudents"
-            ).textContent = present;
+            ).textContent =
+                present;
 
 
             document.getElementById(
                 "absentStudents"
-            ).textContent = absent;
+            ).textContent =
+                absent;
 
 
             document.getElementById(
                 "attendanceRate"
-            ).textContent = rate + "%";
+            ).textContent =
+                rate + "%";
 
 
             document.getElementById(
                 "recordCount"
             ).textContent =
-                `${total} student${total === 1 ? "" : "s"}`;
+                `${total} record${total === 1 ? "" : "s"}`;
 
         }
 
 
         // Display table
+
         function displayAttendance(data) {
 
             const table =
@@ -644,8 +966,11 @@
 
                 table.innerHTML = `
                     <tr>
-                        <td colspan="5" class="empty">
-                            No students found.
+                        <td
+                            colspan="5"
+                            class="empty"
+                        >
+                            No attendance records found.
                         </td>
                     </tr>
                 `;
@@ -656,74 +981,97 @@
 
 
             table.innerHTML =
-                data.map(record => {
+                data.map(
+                    record => {
 
-                    const status =
-                        String(
-                            record.status || "Absent"
-                        ).toLowerCase();
-
-
-                    const isPresent =
-                        status === "present";
+                        const status =
+                            String(
+                                record.status ||
+                                "Absent"
+                            ).toLowerCase();
 
 
-                    return `
-                        <tr>
+                        const isPresent =
+                            status ===
+                            "present";
 
-                            <td class="enrollment">
-                                ${escapeHtml(
-                                    record.enrollment_id
-                                )}
-                            </td>
 
-                            <td class="student-name">
-                                ${escapeHtml(
-                                    record.name
-                                )}
-                            </td>
+                        const recordDate =
+                            record.date ||
+                            record.attendance_date ||
+                            "-";
 
-                            <td>
-                                ${escapeHtml(
-                                    record.date || "-"
-                                )}
-                            </td>
 
-                            <td class="time">
-                                ${escapeHtml(
-                                    record.time || "-"
-                                )}
-                            </td>
+                        const recordTime =
+                            record.time ||
+                            record.attendance_time ||
+                            "-";
 
-                            <td>
 
-                                <span class="status ${
-                                    isPresent
-                                    ? "present"
-                                    : "absent"
-                                }">
+                        return `
+                            <tr>
 
-                                    <span class="status-dot"></span>
+                                <td class="enrollment">
+                                    ${escapeHtml(
+                                        record.enrollment_id
+                                    )}
+                                </td>
 
-                                    ${
+
+                                <td class="student-name">
+                                    ${escapeHtml(
+                                        record.name
+                                    )}
+                                </td>
+
+
+                                <td>
+                                    ${escapeHtml(
+                                        recordDate
+                                    )}
+                                </td>
+
+
+                                <td class="time">
+                                    ${escapeHtml(
+                                        recordTime
+                                    )}
+                                </td>
+
+
+                                <td>
+
+                                    <span class="status ${
                                         isPresent
-                                        ? "Present"
-                                        : "Absent"
-                                    }
+                                        ? "present"
+                                        : "absent"
+                                    }">
 
-                                </span>
+                                        <span
+                                            class="status-dot"
+                                        ></span>
 
-                            </td>
+                                        ${
+                                            isPresent
+                                            ? "Present"
+                                            : "Absent"
+                                        }
 
-                        </tr>
-                    `;
+                                    </span>
 
-                }).join("");
+                                </td>
+
+                            </tr>
+                        `;
+
+                    }
+                ).join("");
 
         }
 
 
         // Date heading
+
         function updateDateText(date) {
 
             const text =
@@ -735,7 +1083,9 @@
             if (!date) {
 
                 text.textContent =
-                    "Today's attendance";
+                    selectedStudent
+                    ? "Complete attendance history"
+                    : "Today's attendance";
 
                 return;
 
@@ -766,8 +1116,11 @@
 
 
         // Search
+
         document
-            .getElementById("searchInput")
+            .getElementById(
+                "searchInput"
+            )
             .addEventListener(
                 "input",
                 function () {
@@ -784,19 +1137,25 @@
 
                                 const name =
                                     String(
-                                        record.name || ""
+                                        record.name ||
+                                        ""
                                     ).toLowerCase();
 
 
                                 const enrollment =
                                     String(
-                                        record.enrollment_id || ""
+                                        record.enrollment_id ||
+                                        ""
                                     ).toLowerCase();
 
 
                                 return (
-                                    name.includes(search) ||
-                                    enrollment.includes(search)
+                                    name.includes(
+                                        search
+                                    ) ||
+                                    enrollment.includes(
+                                        search
+                                    )
                                 );
 
                             }
@@ -822,8 +1181,11 @@
 
 
         // Date change
+
         document
-            .getElementById("dateFilter")
+            .getElementById(
+                "dateFilter"
+            )
             .addEventListener(
                 "change",
                 loadAttendance
@@ -831,6 +1193,7 @@
 
 
         // Escape HTML
+
         function escapeHtml(value) {
 
             return String(
@@ -861,7 +1224,10 @@
 
 
         // Start
+
         setTodayDate();
+
+        loadSelectedStudentInfo();
 
         loadAttendance();
 
