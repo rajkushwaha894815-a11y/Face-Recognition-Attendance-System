@@ -3,16 +3,68 @@ import pickle
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from urllib.parse import urlparse, unquote
+from functools import wraps
 
 import cv2
 import face_recognition
 import numpy as np
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from flask import Flask, jsonify, render_template, request, Response
+from flask import (
+    Flask,
+    jsonify,
+    render_template,
+    request,
+    Response,
+    session,
+    redirect,
+    url_for
+)
 
 
 app = Flask(__name__)
+
+
+# =========================================================
+# ADMIN AUTHENTICATION
+# =========================================================
+
+# Secret key for Flask sessions
+app.secret_key = os.environ.get(
+    "SECRET_KEY",
+    "change-this-secret-key"
+)
+
+# Admin credentials
+# These defaults are only for LOCAL TESTING.
+# On Render, we will set environment variables.
+ADMIN_USERNAME = os.environ.get(
+    "ADMIN_USERNAME",
+    "admin"
+)
+
+ADMIN_PASSWORD = os.environ.get(
+    "ADMIN_PASSWORD",
+    "admin123"
+)
+
+
+def login_required(view_function):
+
+    @wraps(view_function)
+    def protected_view(*args, **kwargs):
+
+        if not session.get("admin_logged_in"):
+            return redirect(
+                url_for("login_page")
+            )
+
+        return view_function(
+            *args,
+            **kwargs
+        )
+
+    return protected_view
 
 
 # =========================================================
@@ -22,10 +74,13 @@ app = Flask(__name__)
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 if not DATABASE_URL:
-    raise RuntimeError("DATABASE_URL environment variable is not set")
+    raise RuntimeError(
+        "DATABASE_URL environment variable is not set"
+    )
 
 
 def connection():
+
     parsed = urlparse(DATABASE_URL)
 
     return psycopg2.connect(
@@ -33,7 +88,9 @@ def connection():
         port=parsed.port or 5432,
         database=parsed.path.lstrip("/"),
         user=parsed.username,
-        password=unquote(parsed.password or ""),
+        password=unquote(
+            parsed.password or ""
+        ),
         sslmode="require",
         connect_timeout=10
     )
@@ -54,16 +111,18 @@ def india_now():
 # FACE SETTINGS
 # =========================================================
 
-# Lower value = stricter matching.
-# 0.45 is safer against wrong attendance.
 FACE_TOLERANCE = float(
-    os.environ.get("FACE_TOLERANCE", "0.45")
+    os.environ.get(
+        "FACE_TOLERANCE",
+        "0.45"
+    )
 )
 
-# Difference required between best and second-best match.
-# This helps prevent ambiguous/wrong matches.
 FACE_MARGIN = float(
-    os.environ.get("FACE_MARGIN", "0.04")
+    os.environ.get(
+        "FACE_MARGIN",
+        "0.04"
+    )
 )
 
 
@@ -72,11 +131,6 @@ FACE_MARGIN = float(
 # =========================================================
 
 def prepare_face_image(frame):
-    """
-    Resize and lightly improve webcam image.
-    The SAME processing is used during enrollment
-    and recognition.
-    """
 
     if frame is None or frame.size == 0:
         return None
@@ -86,14 +140,23 @@ def prepare_face_image(frame):
     max_width = 900
 
     if w > max_width:
+
         scale = max_width / float(w)
 
-        new_width = int(w * scale)
-        new_height = int(h * scale)
+        new_width = int(
+            w * scale
+        )
+
+        new_height = int(
+            h * scale
+        )
 
         frame = cv2.resize(
             frame,
-            (new_width, new_height),
+            (
+                new_width,
+                new_height
+            ),
             interpolation=cv2.INTER_AREA
         )
 
@@ -103,14 +166,18 @@ def prepare_face_image(frame):
         cv2.COLOR_BGR2LAB
     )
 
-    l_channel, a_channel, b_channel = cv2.split(lab)
+    l_channel, a_channel, b_channel = cv2.split(
+        lab
+    )
 
     clahe = cv2.createCLAHE(
         clipLimit=2.0,
         tileGridSize=(8, 8)
     )
 
-    l_channel = clahe.apply(l_channel)
+    l_channel = clahe.apply(
+        l_channel
+    )
 
     enhanced = cv2.merge(
         (
@@ -127,17 +194,10 @@ def prepare_face_image(frame):
 
 
 def detect_and_encode(frame):
-    """
-    Detect faces and generate 128-dimensional
-    face encodings.
 
-    Returns:
-        face_locations
-        face_encodings
-        processed_rgb
-    """
-
-    processed = prepare_face_image(frame)
+    processed = prepare_face_image(
+        frame
+    )
 
     if processed is None:
         return [], [], None
@@ -173,23 +233,16 @@ def detect_and_encode(frame):
 # FACE ENCODING DATABASE COMPATIBILITY
 # =========================================================
 
-def decode_stored_encoding(stored_encoding):
-    """
-    Supports multiple formats:
-
-    1. Current pickle format
-    2. Legacy raw float64 bytes
-    3. Legacy raw float32 bytes
-
-    Returns:
-        numpy array shape (128,)
-        OR None if invalid
-    """
+def decode_stored_encoding(
+    stored_encoding
+):
 
     if stored_encoding is None:
         return None
 
-    raw = bytes(stored_encoding)
+    raw = bytes(
+        stored_encoding
+    )
 
     if not raw:
         return None
@@ -199,7 +252,10 @@ def decode_stored_encoding(stored_encoding):
     # -----------------------------------------------------
 
     try:
-        decoded = pickle.loads(raw)
+
+        decoded = pickle.loads(
+            raw
+        )
 
         decoded = np.asarray(
             decoded,
@@ -209,23 +265,26 @@ def decode_stored_encoding(stored_encoding):
         if decoded.shape == (128,):
             return decoded
 
-        decoded = decoded.reshape(-1)
+        decoded = decoded.reshape(
+            -1
+        )
 
         if decoded.size == 128:
-            return decoded.astype(np.float64)
+            return decoded.astype(
+                np.float64
+            )
 
     except Exception:
         pass
 
     # -----------------------------------------------------
-    # FORMAT 2: Legacy float64 raw bytes
-    #
-    # 128 * 8 = 1024 bytes
+    # FORMAT 2: Legacy float64
     # -----------------------------------------------------
 
     if len(raw) == 128 * 8:
 
         try:
+
             decoded = np.frombuffer(
                 raw,
                 dtype=np.float64
@@ -238,18 +297,19 @@ def decode_stored_encoding(stored_encoding):
             pass
 
     # -----------------------------------------------------
-    # FORMAT 3: Legacy float32 raw bytes
-    #
-    # 128 * 4 = 512 bytes
+    # FORMAT 3: Legacy float32
     # -----------------------------------------------------
 
     if len(raw) == 128 * 4:
 
         try:
+
             decoded = np.frombuffer(
                 raw,
                 dtype=np.float32
-            ).astype(np.float64)
+            ).astype(
+                np.float64
+            )
 
             if decoded.shape == (128,):
                 return decoded
@@ -302,27 +362,108 @@ def init_db():
 
 
 # =========================================================
+# LOGIN / LOGOUT
+# =========================================================
+
+@app.get("/login")
+def login_page():
+
+    if session.get(
+        "admin_logged_in"
+    ):
+
+        return redirect(
+            url_for("home")
+        )
+
+    return render_template(
+        "login.html"
+    )
+
+
+@app.post("/api/login")
+def login():
+
+    username = request.form.get(
+        "username",
+        ""
+    ).strip()
+
+    password = request.form.get(
+        "password",
+        ""
+    )
+
+    if (
+        username == ADMIN_USERNAME
+        and password == ADMIN_PASSWORD
+    ):
+
+        session.clear()
+
+        session["admin_logged_in"] = True
+
+        session["admin_username"] = username
+
+        return jsonify({
+            "success": True,
+            "message": "Login successful"
+        })
+
+    return jsonify({
+        "success": False,
+        "message": "Invalid username or password"
+    }), 401
+
+
+@app.get("/logout")
+def logout():
+
+    session.clear()
+
+    return redirect(
+        url_for("login_page")
+    )
+
+
+# =========================================================
 # HOME / PAGES
 # =========================================================
 
 @app.get("/")
+@login_required
 def home():
-    return render_template("index.html")
+
+    return render_template(
+        "index.html"
+    )
 
 
 @app.get("/enroll")
+@login_required
 def enroll_page():
-    return render_template("enroll.html")
+
+    return render_template(
+        "enroll.html"
+    )
 
 
 @app.get("/students")
+@login_required
 def students_page():
-    return render_template("students.html")
+
+    return render_template(
+        "students.html"
+    )
 
 
 @app.get("/attendance")
+@login_required
 def attendance_page():
-    return render_template("attendance.html")
+
+    return render_template(
+        "attendance.html"
+    )
 
 
 # =========================================================
@@ -330,6 +471,7 @@ def attendance_page():
 # =========================================================
 
 @app.post("/api/enroll")
+@login_required
 def enroll_student():
 
     enrollment_id = request.form.get(
@@ -342,7 +484,9 @@ def enroll_student():
         ""
     ).strip()
 
-    image = request.files.get("image")
+    image = request.files.get(
+        "image"
+    )
 
     if not enrollment_id:
 
@@ -391,7 +535,6 @@ def enroll_student():
             "message": "Could not read image"
         }), 400
 
-    # Same pipeline as recognition
     face_locations, encodings, _ = detect_and_encode(
         frame
     )
@@ -422,7 +565,9 @@ def enroll_student():
 
         return jsonify({
             "success": False,
-            "message": "Could not generate face encoding"
+            "message": (
+                "Could not generate face encoding"
+            )
         }), 400
 
     face_encoding = np.asarray(
@@ -430,12 +575,13 @@ def enroll_student():
         dtype=np.float64
     )
 
-    # Safety validation
     if face_encoding.shape != (128,):
 
         return jsonify({
             "success": False,
-            "message": "Invalid face encoding generated"
+            "message": (
+                "Invalid face encoding generated"
+            )
         }), 400
 
     conn = connection()
@@ -443,7 +589,6 @@ def enroll_student():
 
     try:
 
-        # Check duplicate enrollment ID
         cur.execute(
             """
             SELECT enrollment_id
@@ -457,10 +602,11 @@ def enroll_student():
 
             return jsonify({
                 "success": False,
-                "message": "Enrollment ID already exists"
+                "message": (
+                    "Enrollment ID already exists"
+                )
             }), 409
 
-        # Always save current encoding in pickle format
         encoded_bytes = pickle.dumps(
             face_encoding,
             protocol=pickle.HIGHEST_PROTOCOL
@@ -482,8 +628,12 @@ def enroll_student():
                 enrollment_id,
                 name,
                 "",
-                psycopg2.Binary(image_bytes),
-                psycopg2.Binary(encoded_bytes)
+                psycopg2.Binary(
+                    image_bytes
+                ),
+                psycopg2.Binary(
+                    encoded_bytes
+                )
             )
         )
 
@@ -491,12 +641,15 @@ def enroll_student():
 
         print(
             f"ENROLLED -> {enrollment_id} | "
-            f"{name} | encoding shape={face_encoding.shape}"
+            f"{name} | "
+            f"encoding shape={face_encoding.shape}"
         )
 
         return jsonify({
             "success": True,
-            "message": "Student enrolled successfully"
+            "message": (
+                "Student enrolled successfully"
+            )
         })
 
     except Exception as e:
@@ -510,7 +663,10 @@ def enroll_student():
 
         return jsonify({
             "success": False,
-            "message": "Enrollment failed: " + str(e)
+            "message": (
+                "Enrollment failed: "
+                + str(e)
+            )
         }), 500
 
     finally:
@@ -524,6 +680,7 @@ def enroll_student():
 # =========================================================
 
 @app.get("/api/students")
+@login_required
 def get_students():
 
     conn = connection()
@@ -560,8 +717,13 @@ def get_students():
 # STUDENT PHOTO
 # =========================================================
 
-@app.get("/api/students/<enrollment_id>/photo")
-def student_photo(enrollment_id):
+@app.get(
+    "/api/students/<enrollment_id>/photo"
+)
+@login_required
+def student_photo(
+    enrollment_id
+):
 
     conn = connection()
     cur = conn.cursor()
@@ -600,8 +762,13 @@ def student_photo(enrollment_id):
 # DELETE STUDENT
 # =========================================================
 
-@app.delete("/api/students/<enrollment_id>")
-def delete_student(enrollment_id):
+@app.delete(
+    "/api/students/<enrollment_id>"
+)
+@login_required
+def delete_student(
+    enrollment_id
+):
 
     conn = connection()
     cur = conn.cursor()
@@ -637,7 +804,9 @@ def delete_student(enrollment_id):
 
         return jsonify({
             "success": True,
-            "message": "Student deleted successfully"
+            "message": (
+                "Student deleted successfully"
+            )
         })
 
     except Exception as e:
@@ -665,6 +834,7 @@ def delete_student(enrollment_id):
 # =========================================================
 
 @app.post("/api/recognize")
+@login_required
 def recognize():
 
     conn = None
@@ -672,11 +842,9 @@ def recognize():
 
     try:
 
-        # -------------------------------------------------
-        # RECEIVE IMAGE
-        # -------------------------------------------------
-
-        image = request.files.get("image")
+        image = request.files.get(
+            "image"
+        )
 
         if not image:
 
@@ -692,7 +860,9 @@ def recognize():
 
             return jsonify({
                 "success": False,
-                "message": "Empty image received",
+                "message": (
+                    "Empty image received"
+                ),
                 "students": []
             }), 400
 
@@ -710,13 +880,11 @@ def recognize():
 
             return jsonify({
                 "success": False,
-                "message": "Invalid image received from camera",
+                "message": (
+                    "Invalid image received"
+                ),
                 "students": []
             }), 400
-
-        # -------------------------------------------------
-        # DETECT FACE
-        # -------------------------------------------------
 
         face_locations, face_encodings, _ = detect_and_encode(
             frame
@@ -745,10 +913,6 @@ def recognize():
                 "students": []
             })
 
-        # -------------------------------------------------
-        # DATABASE
-        # -------------------------------------------------
-
         conn = connection()
 
         cur = conn.cursor()
@@ -767,13 +931,11 @@ def recognize():
 
             return jsonify({
                 "success": False,
-                "message": "No students are enrolled yet.",
+                "message": (
+                    "No students are enrolled yet."
+                ),
                 "students": []
             })
-
-        # -------------------------------------------------
-        # LOAD ALL VALID ENCODINGS
-        # -------------------------------------------------
 
         known_students = []
 
@@ -794,12 +956,15 @@ def recognize():
                     enrollment_id,
                     name,
                     "size=",
-                    len(bytes(stored_encoding))
+                    len(
+                        bytes(
+                            stored_encoding
+                        )
+                    )
                 )
 
                 continue
 
-            # Validate range/shape
             if known_encoding.shape != (128,):
 
                 print(
@@ -829,10 +994,6 @@ def recognize():
                 "students": []
             }), 500
 
-        # -------------------------------------------------
-        # DATE / TIME
-        # -------------------------------------------------
-
         now = india_now()
 
         today = now.strftime(
@@ -845,15 +1006,10 @@ def recognize():
 
         recognized_students = []
 
-        # -------------------------------------------------
-        # MATCH EACH DETECTED FACE
-        # -------------------------------------------------
-
         for face_encoding in face_encodings:
 
             distances = []
 
-            # Calculate distance against EVERY student
             for (
                 enrollment_id,
                 name,
@@ -882,7 +1038,9 @@ def recognize():
                     print(
                         "DISTANCE ERROR:",
                         enrollment_id,
-                        repr(distance_error)
+                        repr(
+                            distance_error
+                        )
                     )
 
             if not distances:
@@ -898,19 +1056,17 @@ def recognize():
 
                 continue
 
-            # Sort by smallest distance
             distances.sort(
                 key=lambda x: x[0]
             )
 
-            # Best match
             best_distance = distances[0][0]
+
             best_student = (
                 distances[0][1],
                 distances[0][2]
             )
 
-            # Second-best match
             second_distance = (
                 distances[1][0]
                 if len(distances) > 1
@@ -929,14 +1085,20 @@ def recognize():
                 "Best:",
                 best_student,
                 "distance=",
-                round(best_distance, 4)
+                round(
+                    best_distance,
+                    4
+                )
             )
 
             if second_distance is not None:
 
                 print(
                     "Second distance=",
-                    round(second_distance, 4)
+                    round(
+                        second_distance,
+                        4
+                    )
                 )
 
             print(
@@ -953,16 +1115,11 @@ def recognize():
                 "========================================"
             )
 
-            # -------------------------------------------------
-            # SAFETY CHECK
-            # -------------------------------------------------
-
             match_is_good = (
-                best_distance <= FACE_TOLERANCE
+                best_distance <=
+                FACE_TOLERANCE
             )
 
-            # If multiple students exist, require
-            # the best match to be sufficiently better.
             if second_distance is not None:
 
                 distance_gap = (
@@ -977,10 +1134,6 @@ def recognize():
                     print(
                         "AMBIGUOUS MATCH -> UNKNOWN"
                     )
-
-            # -------------------------------------------------
-            # UNKNOWN FACE
-            # -------------------------------------------------
 
             if not match_is_good:
 
@@ -998,14 +1151,8 @@ def recognize():
 
                 continue
 
-            # -------------------------------------------------
-            # VALID STUDENT
-            # -------------------------------------------------
-
             enrollment_id, name = best_student
 
-            # Check whether today's attendance
-            # already exists
             cur.execute(
                 """
                 SELECT id
@@ -1020,10 +1167,6 @@ def recognize():
             )
 
             already_marked = cur.fetchone()
-
-            # -------------------------------------------------
-            # FIRST ATTENDANCE
-            # -------------------------------------------------
 
             if not already_marked:
 
@@ -1080,10 +1223,6 @@ def recognize():
                     f"distance={best_distance:.4f}"
                 )
 
-            # -------------------------------------------------
-            # ALREADY MARKED
-            # -------------------------------------------------
-
             else:
 
                 recognized_students.append({
@@ -1104,10 +1243,6 @@ def recognize():
                     f"{name}"
                 )
 
-        # -------------------------------------------------
-        # RESPONSE
-        # -------------------------------------------------
-
         has_recognized = any(
             student["name"] != "Unknown"
             for student in recognized_students
@@ -1118,7 +1253,10 @@ def recognize():
             "message": (
                 "Face recognized"
                 if has_recognized
-                else "Face detected, but no matching student found"
+                else (
+                    "Face detected, but no "
+                    "matching student found"
+                )
             ),
             "students": recognized_students
         })
@@ -1126,6 +1264,7 @@ def recognize():
     except Exception as e:
 
         if conn:
+
             try:
                 conn.rollback()
             except Exception:
@@ -1167,6 +1306,7 @@ def recognize():
 # =========================================================
 
 @app.get("/api/dashboard")
+@login_required
 def dashboard():
 
     conn = connection()
@@ -1197,7 +1337,8 @@ def dashboard():
         present_today = cur.fetchone()[0]
 
         absent_today = max(
-            total_students - present_today,
+            total_students -
+            present_today,
             0
         )
 
@@ -1232,6 +1373,7 @@ def dashboard():
 # =========================================================
 
 @app.get("/api/attendance")
+@login_required
 def attendance_api():
 
     conn = connection()
@@ -1264,7 +1406,6 @@ def attendance_api():
         records = cur.fetchall()
 
         for record in records:
-
             record["status"] = "Present"
 
         return jsonify({
@@ -1283,6 +1424,7 @@ def attendance_api():
 # =========================================================
 
 @app.get("/api/attendance-management")
+@login_required
 def attendance_management():
 
     try:
@@ -1307,7 +1449,9 @@ def attendance_management():
 
                 return jsonify({
                     "success": False,
-                    "message": "Invalid date format"
+                    "message": (
+                        "Invalid date format"
+                    )
                 }), 400
 
         else:
@@ -1385,6 +1529,7 @@ def attendance_management():
 # =========================================================
 
 @app.get("/api/history")
+@login_required
 def history():
 
     conn = connection()
@@ -1410,7 +1555,6 @@ def history():
         records = cur.fetchall()
 
         for record in records:
-
             record["status"] = "Present"
 
         return jsonify({
@@ -1442,3 +1586,4 @@ if __name__ == "__main__":
         ),
         debug=False
     )
+
