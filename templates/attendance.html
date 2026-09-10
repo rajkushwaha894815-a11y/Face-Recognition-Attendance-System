@@ -9,228 +9,578 @@
     <style>
         * {
             box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #050505;
+            --surface: #0b0b0f;
+            --surface-2: #101016;
+            --surface-3: #15151c;
+            --border: rgba(255,255,255,0.08);
+
+            --text: #f5f7ff;
+            --muted: #9296a5;
+
+            --blue: #3b82f6;
+            --blue-dark: #2563eb;
+            --purple: #8b5cf6;
+
+            --green: #22c55e;
+            --red: #ef4444;
+
+            --shadow: 0 20px 60px rgba(0,0,0,0.45);
+        }
+
+        html {
+            scroll-behavior: smooth;
         }
 
         body {
-            margin: 0;
-            font-family: Arial, Helvetica, sans-serif;
-            background: #f5f7fb;
-            color: #1f2937;
+            min-height: 100vh;
+            font-family: Inter, Arial, Helvetica, sans-serif;
+
+            background:
+                radial-gradient(
+                    circle at 10% 0%,
+                    rgba(59,130,246,0.12),
+                    transparent 28%
+                ),
+                radial-gradient(
+                    circle at 90% 10%,
+                    rgba(139,92,246,0.12),
+                    transparent 30%
+                ),
+                var(--bg);
+
+            color: var(--text);
         }
 
+        /* =========================
+           HEADER
+        ========================= */
+
         .header {
-            background: linear-gradient(135deg, #1d4ed8, #2563eb);
-            color: white;
-            padding: 28px 35px;
+            position: relative;
+            overflow: hidden;
+
+            padding: 42px 35px;
+
+            border-bottom: 1px solid var(--border);
+
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(59,130,246,0.16),
+                    rgba(139,92,246,0.08),
+                    rgba(0,0,0,0.2)
+                );
+        }
+
+        .header::before {
+            content: "";
+
+            position: absolute;
+
+            width: 320px;
+            height: 320px;
+
+            top: -180px;
+            right: 8%;
+
+            background: rgba(59,130,246,0.15);
+
+            filter: blur(90px);
+
+            border-radius: 50%;
         }
 
         .header-content {
+            position: relative;
+
+            z-index: 1;
+
             max-width: 1400px;
+
             margin: auto;
         }
 
         .header h1 {
-            margin: 0 0 7px;
-            font-size: 30px;
+            margin-bottom: 9px;
+
+            font-size: 34px;
+
+            font-weight: 800;
+
+            letter-spacing: -1px;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #ffffff,
+                    #8ab4ff,
+                    #b794ff
+                );
+
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .header p {
-            margin: 0;
-            opacity: 0.9;
+            color: var(--muted);
+
+            font-size: 15px;
         }
+
+        /* =========================
+           CONTAINER
+        ========================= */
 
         .container {
             max-width: 1400px;
+
             margin: auto;
-            padding: 30px;
+
+            padding: 32px;
         }
 
-        /* Selected Student */
+        /* =========================
+           STUDENT BANNER
+        ========================= */
 
         .student-banner {
             display: none;
-            background: white;
-            border-radius: 15px;
-            padding: 20px 24px;
-            margin-bottom: 22px;
-            box-shadow: 0 3px 15px rgba(0, 0, 0, 0.06);
-            border-left: 5px solid #2563eb;
+
+            position: relative;
+
+            overflow: hidden;
+
+            padding: 22px 25px;
+
+            margin-bottom: 24px;
+
+            border: 1px solid var(--border);
+
+            border-radius: 18px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(59,130,246,0.13),
+                    rgba(139,92,246,0.08)
+                ),
+                rgba(15,15,20,0.85);
+
+            box-shadow: var(--shadow);
+
+            backdrop-filter: blur(15px);
+        }
+
+        .student-banner::before {
+            content: "";
+
+            position: absolute;
+
+            width: 180px;
+            height: 180px;
+
+            left: -80px;
+            top: -100px;
+
+            background: rgba(59,130,246,0.2);
+
+            filter: blur(60px);
+
+            border-radius: 50%;
         }
 
         .student-banner.active {
             display: flex;
+
             justify-content: space-between;
+
             align-items: center;
+
             gap: 15px;
+
             flex-wrap: wrap;
         }
 
         .student-banner h2 {
-            margin: 0 0 5px;
+            position: relative;
+
+            margin-bottom: 7px;
+
             font-size: 21px;
         }
 
         .student-banner p {
-            margin: 0;
-            color: #6b7280;
+            position: relative;
+
+            color: var(--muted);
+
             font-size: 14px;
         }
 
         .student-id {
-            color: #2563eb;
-            font-weight: 600;
+            color: #70a7ff;
+
+            font-weight: 700;
         }
 
         .back-students {
             text-decoration: none;
-            background: #111827;
+
             color: white;
-            padding: 10px 16px;
-            border-radius: 8px;
-            font-weight: 600;
+
+            padding: 10px 17px;
+
+            border-radius: 10px;
+
+            border: 1px solid rgba(255,255,255,0.1);
+
+            background: rgba(255,255,255,0.06);
+
+            transition: 0.25s ease;
         }
 
         .back-students:hover {
-            background: #374151;
+            background: var(--blue);
+
+            border-color: var(--blue);
+
+            transform: translateY(-2px);
         }
 
-        /* Statistics */
+        /* =========================
+           STATISTICS
+        ========================= */
 
         .stats {
             display: grid;
+
             grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
+
+            gap: 18px;
+
             margin-bottom: 25px;
         }
 
         .stat-card {
-            background: white;
-            padding: 22px;
-            border-radius: 14px;
-            box-shadow: 0 3px 15px rgba(0, 0, 0, 0.06);
+            position: relative;
+
+            overflow: hidden;
+
+            padding: 23px;
+
+            min-height: 125px;
+
+            border: 1px solid var(--border);
+
+            border-radius: 18px;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(255,255,255,0.055),
+                    rgba(255,255,255,0.015)
+                ),
+                var(--surface);
+
+            box-shadow: var(--shadow);
+
+            backdrop-filter: blur(15px);
+
+            transition: 0.3s ease;
+        }
+
+        .stat-card::after {
+            content: "";
+
+            position: absolute;
+
+            width: 100px;
+            height: 100px;
+
+            right: -45px;
+            bottom: -55px;
+
+            border-radius: 50%;
+
+            background: rgba(59,130,246,0.12);
+
+            filter: blur(25px);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+
+            border-color: rgba(59,130,246,0.28);
         }
 
         .stat-title {
-            color: #6b7280;
-            font-size: 14px;
-            margin-bottom: 8px;
+            color: var(--muted);
+
+            font-size: 13px;
+
+            margin-bottom: 12px;
+
+            text-transform: uppercase;
+
+            letter-spacing: 0.6px;
         }
 
         .stat-number {
-            font-size: 28px;
-            font-weight: bold;
+            font-size: 32px;
+
+            font-weight: 800;
+
+            letter-spacing: -1px;
         }
 
         .total {
-            color: #2563eb;
+            color: #60a5fa;
         }
 
         .present {
-            color: #16a34a;
+            color: var(--green);
         }
 
         .absent {
-            color: #dc2626;
+            color: var(--red);
         }
 
         .percentage {
-            color: #7c3aed;
+            color: #a78bfa;
         }
 
-        /* Main card */
+        /* =========================
+           MAIN CARD
+        ========================= */
 
         .card {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 3px 15px rgba(0, 0, 0, 0.06);
+            position: relative;
+
+            overflow: hidden;
+
+            padding: 27px;
+
+            border: 1px solid var(--border);
+
+            border-radius: 20px;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(255,255,255,0.045),
+                    rgba(255,255,255,0.012)
+                ),
+                var(--surface);
+
+            box-shadow: var(--shadow);
+
+            backdrop-filter: blur(18px);
+        }
+
+        .card::before {
+            content: "";
+
+            position: absolute;
+
+            width: 280px;
+            height: 280px;
+
+            right: -160px;
+            top: -170px;
+
+            background: rgba(139,92,246,0.1);
+
+            filter: blur(80px);
+
+            border-radius: 50%;
         }
 
         .top-row {
+            position: relative;
+
+            z-index: 1;
+
             display: flex;
+
             justify-content: space-between;
+
             align-items: center;
-            gap: 15px;
+
+            gap: 20px;
+
             flex-wrap: wrap;
-            margin-bottom: 22px;
+
+            margin-bottom: 23px;
         }
 
         .title-section h2 {
-            margin: 0 0 5px;
-            font-size: 22px;
+            margin-bottom: 6px;
+
+            font-size: 23px;
+
+            font-weight: 750;
         }
 
         .title-section p {
-            margin: 0;
-            color: #6b7280;
+            color: var(--muted);
+
             font-size: 14px;
         }
 
+        /* =========================
+           FILTERS
+        ========================= */
+
         .filters {
             display: flex;
+
             gap: 10px;
+
             flex-wrap: wrap;
         }
 
         input {
-            padding: 11px 14px;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
+            min-width: 190px;
+
+            padding: 12px 14px;
+
+            border: 1px solid var(--border);
+
+            border-radius: 11px;
+
             outline: none;
+
+            color: var(--text);
+
+            background: rgba(255,255,255,0.045);
+
             font-size: 14px;
-            background: white;
+
+            transition: 0.25s ease;
+        }
+
+        input::placeholder {
+            color: #777b88;
         }
 
         input:focus {
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            border-color: rgba(59,130,246,0.65);
+
+            background: rgba(59,130,246,0.05);
+
+            box-shadow:
+                0 0 0 3px rgba(59,130,246,0.12),
+                0 0 25px rgba(59,130,246,0.08);
+        }
+
+        input[type="date"] {
+            color-scheme: dark;
         }
 
         .refresh-btn {
-            border: none;
-            padding: 11px 16px;
-            border-radius: 8px;
-            background: #2563eb;
+            border: 1px solid rgba(59,130,246,0.3);
+
+            padding: 12px 18px;
+
+            border-radius: 11px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--blue),
+                    var(--purple)
+                );
+
             color: white;
+
             cursor: pointer;
-            font-weight: 600;
+
+            font-weight: 700;
+
+            box-shadow:
+                0 8px 25px rgba(59,130,246,0.2);
+
+            transition: 0.25s ease;
         }
 
         .refresh-btn:hover {
-            background: #1d4ed8;
+            transform: translateY(-2px);
+
+            box-shadow:
+                0 12px 30px rgba(59,130,246,0.3);
         }
 
-        /* Table */
+        /* =========================
+           TABLE
+        ========================= */
 
         .table-container {
+            position: relative;
+
+            z-index: 1;
+
             overflow-x: auto;
-            border: 1px solid #e5e7eb;
-            border-radius: 10px;
+
+            border: 1px solid var(--border);
+
+            border-radius: 15px;
+
+            background: rgba(0,0,0,0.2);
         }
 
         table {
             width: 100%;
+
             border-collapse: collapse;
+
             min-width: 750px;
         }
 
         th {
-            background: #f8fafc;
-            color: #475569;
-            font-size: 13px;
+            background: rgba(255,255,255,0.035);
+
+            color: #a8adba;
+
+            font-size: 11px;
+
             text-transform: uppercase;
-            letter-spacing: 0.4px;
+
+            letter-spacing: 1px;
         }
 
         th,
         td {
-            padding: 15px;
+            padding: 17px 16px;
+
             text-align: left;
-            border-bottom: 1px solid #e5e7eb;
+
+            border-bottom:
+                1px solid rgba(255,255,255,0.055);
+        }
+
+        td {
+            color: #dfe3ed;
+
+            font-size: 14px;
+        }
+
+        tbody tr {
+            transition: 0.2s ease;
         }
 
         tbody tr:hover {
-            background: #f8fafc;
+            background:
+                linear-gradient(
+                    90deg,
+                    rgba(59,130,246,0.07),
+                    rgba(139,92,246,0.035)
+                );
         }
 
         tbody tr:last-child td {
@@ -238,94 +588,176 @@
         }
 
         .enrollment {
-            font-weight: 600;
-            color: #2563eb;
+            color: #60a5fa;
+
+            font-weight: 700;
         }
 
         .student-name {
-            font-weight: 600;
+            color: #ffffff;
+
+            font-weight: 650;
         }
 
-        /* Status */
+        .time {
+            color: #aeb4c2;
+        }
+
+        /* =========================
+           STATUS
+        ========================= */
 
         .status {
             display: inline-flex;
+
             align-items: center;
-            gap: 6px;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
+
+            gap: 7px;
+
+            padding: 7px 12px;
+
+            border-radius: 30px;
+
+            font-size: 11px;
+
+            font-weight: 800;
+
+            letter-spacing: 0.3px;
+
+            border: 1px solid transparent;
         }
 
         .status.present {
-            background: #dcfce7;
-            color: #15803d;
+            color: #4ade80;
+
+            background: rgba(34,197,94,0.1);
+
+            border-color: rgba(34,197,94,0.2);
         }
 
         .status.absent {
-            background: #fee2e2;
-            color: #dc2626;
+            color: #f87171;
+
+            background: rgba(239,68,68,0.1);
+
+            border-color: rgba(239,68,68,0.2);
         }
 
         .status-dot {
             width: 7px;
+
             height: 7px;
+
             border-radius: 50%;
+
             background: currentColor;
+
+            box-shadow: 0 0 9px currentColor;
         }
 
-        .time {
-            color: #475569;
-        }
+        /* =========================
+           EMPTY / LOADING
+        ========================= */
 
-        .empty {
+        .empty,
+        .loading {
             text-align: center;
-            padding: 45px;
-            color: #6b7280;
+
+            padding: 55px !important;
+
+            color: var(--muted);
         }
 
-        /* Footer */
+        /* =========================
+           BOTTOM ACTIONS
+        ========================= */
 
         .bottom-actions {
+            position: relative;
+
+            z-index: 1;
+
             display: flex;
+
             justify-content: space-between;
+
             align-items: center;
+
             margin-top: 22px;
-            gap: 10px;
+
+            gap: 12px;
+
             flex-wrap: wrap;
         }
 
         .back-btn {
             display: inline-block;
+
             padding: 11px 18px;
-            background: #111827;
+
+            border-radius: 11px;
+
+            border: 1px solid var(--border);
+
+            background: rgba(255,255,255,0.055);
+
             color: white;
+
             text-decoration: none;
-            border-radius: 8px;
-            font-weight: 600;
+
+            font-weight: 650;
+
+            transition: 0.25s ease;
         }
 
         .back-btn:hover {
-            background: #374151;
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--blue),
+                    var(--purple)
+                );
+
+            border-color: transparent;
+
+            transform: translateY(-2px);
         }
 
         .record-count {
-            color: #6b7280;
-            font-size: 14px;
+            color: var(--muted);
+
+            font-size: 13px;
         }
 
-        /* Loading */
+        /* =========================
+           SCROLLBAR
+        ========================= */
 
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #6b7280;
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
         }
 
-        /* Responsive */
+        ::-webkit-scrollbar-track {
+            background: #050505;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #292936;
+
+            border-radius: 20px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3b3b4b;
+        }
+
+        /* =========================
+           RESPONSIVE
+        ========================= */
 
         @media (max-width: 1000px) {
+
             .stats {
                 grid-template-columns: repeat(2, 1fr);
             }
@@ -334,15 +766,15 @@
         @media (max-width: 700px) {
 
             .header {
-                padding: 22px 18px;
+                padding: 30px 18px;
             }
 
             .header h1 {
-                font-size: 24px;
+                font-size: 26px;
             }
 
             .container {
-                padding: 15px;
+                padding: 16px;
             }
 
             .stats {
@@ -351,6 +783,8 @@
 
             .card {
                 padding: 18px;
+
+                border-radius: 16px;
             }
 
             .filters {
@@ -360,10 +794,26 @@
             .filters input,
             .refresh-btn {
                 width: 100%;
+
+                min-width: 100%;
             }
 
             .student-banner.active {
                 align-items: flex-start;
+            }
+
+            .student-banner {
+                padding: 18px;
+            }
+
+            .title-section h2 {
+                font-size: 20px;
+            }
+
+            .bottom-actions {
+                align-items: flex-start;
+
+                flex-direction: column;
             }
         }
     </style>
@@ -371,35 +821,53 @@
 
 <body>
 
-    <!-- Header -->
+    <!-- =========================
+         HEADER
+    ========================= -->
 
     <div class="header">
+
         <div class="header-content">
+
             <h1>Attendance Management</h1>
-            <p>Track and manage daily student attendance</p>
+
+            <p>
+                Track and manage daily student attendance
+            </p>
+
         </div>
+
     </div>
 
 
     <div class="container">
 
-        <!-- Selected Student Banner -->
+        <!-- =========================
+             SELECTED STUDENT
+        ========================= -->
 
-        <div class="student-banner" id="studentBanner">
+        <div
+            class="student-banner"
+            id="studentBanner"
+        >
 
             <div>
+
                 <h2 id="selectedStudentName">
                     Student Attendance
                 </h2>
 
                 <p>
                     Enrollment ID:
+
                     <span
                         class="student-id"
                         id="selectedStudentId"
                     ></span>
                 </p>
+
             </div>
+
 
             <a
                 href="/students"
@@ -411,12 +879,17 @@
         </div>
 
 
-        <!-- Statistics -->
+        <!-- =========================
+             STATISTICS
+        ========================= -->
 
         <div class="stats">
 
             <div class="stat-card">
-                <div class="stat-title">Total Students</div>
+
+                <div class="stat-title">
+                    Total Students
+                </div>
 
                 <div
                     class="stat-number total"
@@ -424,11 +897,15 @@
                 >
                     0
                 </div>
+
             </div>
 
 
             <div class="stat-card">
-                <div class="stat-title">Present</div>
+
+                <div class="stat-title">
+                    Present
+                </div>
 
                 <div
                     class="stat-number present"
@@ -436,11 +913,15 @@
                 >
                     0
                 </div>
+
             </div>
 
 
             <div class="stat-card">
-                <div class="stat-title">Absent</div>
+
+                <div class="stat-title">
+                    Absent
+                </div>
 
                 <div
                     class="stat-number absent"
@@ -448,11 +929,15 @@
                 >
                     0
                 </div>
+
             </div>
 
 
             <div class="stat-card">
-                <div class="stat-title">Attendance Rate</div>
+
+                <div class="stat-title">
+                    Attendance Rate
+                </div>
 
                 <div
                     class="stat-number percentage"
@@ -460,12 +945,15 @@
                 >
                     0%
                 </div>
+
             </div>
 
         </div>
 
 
-        <!-- Attendance Card -->
+        <!-- =========================
+             ATTENDANCE CARD
+        ========================= -->
 
         <div class="card">
 
@@ -492,10 +980,12 @@
                         placeholder="🔍 Search student..."
                     >
 
+
                     <input
                         type="date"
                         id="dateFilter"
                     >
+
 
                     <button
                         class="refresh-btn"
@@ -509,7 +999,9 @@
             </div>
 
 
-            <!-- Table -->
+            <!-- =========================
+                 TABLE
+            ========================= -->
 
             <div class="table-container">
 
@@ -518,11 +1010,27 @@
                     <thead>
 
                         <tr>
-                            <th>Enrollment ID</th>
-                            <th>Student Name</th>
-                            <th>Date</th>
-                            <th>Time</th>
-                            <th>Status</th>
+
+                            <th>
+                                Enrollment ID
+                            </th>
+
+                            <th>
+                                Student Name
+                            </th>
+
+                            <th>
+                                Date
+                            </th>
+
+                            <th>
+                                Time
+                            </th>
+
+                            <th>
+                                Status
+                            </th>
+
                         </tr>
 
                     </thead>
@@ -531,12 +1039,14 @@
                     <tbody id="attendanceTable">
 
                         <tr>
+
                             <td
                                 colspan="5"
                                 class="loading"
                             >
                                 Loading attendance...
                             </td>
+
                         </tr>
 
                     </tbody>
@@ -545,6 +1055,10 @@
 
             </div>
 
+
+            <!-- =========================
+                 BOTTOM ACTIONS
+            ========================= -->
 
             <div class="bottom-actions">
 
@@ -574,12 +1088,10 @@
 
         let attendanceData = [];
 
+
         /*
          * Check whether this page was opened
          * from Students -> View Attendance
-         *
-         * Example:
-         * /attendance?student=STU001
          */
 
         const urlParams =
@@ -587,41 +1099,52 @@
                 window.location.search
             );
 
+
         const selectedStudent =
             urlParams.get("student");
 
 
-        // Set today's date
+        /* =========================
+           SET TODAY DATE
+        ========================= */
 
         function setTodayDate() {
 
             const today =
                 new Date();
 
+
             const year =
                 today.getFullYear();
+
 
             const month =
                 String(
                     today.getMonth() + 1
                 ).padStart(2, "0");
 
+
             const day =
                 String(
                     today.getDate()
                 ).padStart(2, "0");
 
+
             const todayString =
                 `${year}-${month}-${day}`;
 
+
             document.getElementById(
                 "dateFilter"
-            ).value = todayString;
+            ).value =
+                todayString;
 
         }
 
 
-        // Show selected student information
+        /* =========================
+           SELECTED STUDENT INFO
+        ========================= */
 
         async function loadSelectedStudentInfo() {
 
@@ -629,33 +1152,43 @@
                 return;
             }
 
+
             const banner =
                 document.getElementById(
                     "studentBanner"
                 );
+
 
             const nameElement =
                 document.getElementById(
                     "selectedStudentName"
                 );
 
+
             const idElement =
                 document.getElementById(
                     "selectedStudentId"
                 );
+
 
             const title =
                 document.getElementById(
                     "tableTitle"
                 );
 
-            banner.classList.add("active");
+
+            banner.classList.add(
+                "active"
+            );
+
 
             idElement.textContent =
                 selectedStudent;
 
+
             title.textContent =
                 "Student Attendance";
+
 
             try {
 
@@ -664,17 +1197,21 @@
                         "/api/students"
                     );
 
+
                 if (!response.ok) {
                     return;
                 }
 
+
                 const result =
                     await response.json();
+
 
                 const students =
                     Array.isArray(result)
                     ? result
                     : result.students || [];
+
 
                 const student =
                     students.find(
@@ -686,6 +1223,7 @@
                                 selectedStudent
                             )
                     );
+
 
                 if (student) {
 
@@ -700,12 +1238,14 @@
 
                 }
 
+
             } catch (error) {
 
                 console.error(
                     "Student info error:",
                     error
                 );
+
 
                 nameElement.textContent =
                     "Student Attendance";
@@ -714,7 +1254,9 @@
         }
 
 
-        // Load attendance
+        /* =========================
+           LOAD ATTENDANCE
+        ========================= */
 
         async function loadAttendance() {
 
@@ -723,10 +1265,12 @@
                     "dateFilter"
                 ).value;
 
+
             const table =
                 document.getElementById(
                     "attendanceTable"
                 );
+
 
             table.innerHTML = `
                 <tr>
@@ -743,8 +1287,7 @@
 
 
                 /*
-                 * If a student is selected,
-                 * load complete attendance history.
+                 * STUDENT SPECIFIC MODE
                  */
 
                 if (selectedStudent) {
@@ -754,24 +1297,33 @@
                             "/api/history"
                         );
 
+
                     if (!response.ok) {
+
                         throw new Error(
                             "Failed to load student attendance"
                         );
+
                     }
+
 
                     const result =
                         await response.json();
 
+
                     if (!result.success) {
+
                         throw new Error(
                             result.message ||
                             "Unable to load attendance"
                         );
+
                     }
+
 
                     const history =
                         result.history || [];
+
 
                     records =
                         history.filter(
@@ -786,8 +1338,7 @@
 
 
                     /*
-                     * If a date is selected,
-                     * filter that student's history.
+                     * FILTER BY DATE
                      */
 
                     if (date) {
@@ -808,8 +1359,7 @@
                 } else {
 
                     /*
-                     * Normal Attendance Management:
-                     * show all students for selected date.
+                     * NORMAL ATTENDANCE MANAGEMENT
                      */
 
                     const url =
@@ -823,9 +1373,11 @@
 
 
                     if (!response.ok) {
+
                         throw new Error(
                             "Failed to load attendance"
                         );
+
                     }
 
 
@@ -834,10 +1386,12 @@
 
 
                     if (!result.success) {
+
                         throw new Error(
                             result.message ||
                             "Unable to load attendance"
                         );
+
                     }
 
 
@@ -890,7 +1444,9 @@
         }
 
 
-        // Statistics
+        /* =========================
+           STATISTICS
+        ========================= */
 
         function updateStatistics(data) {
 
@@ -947,12 +1503,18 @@
             document.getElementById(
                 "recordCount"
             ).textContent =
-                `${total} record${total === 1 ? "" : "s"}`;
+                `${total} record${
+                    total === 1
+                    ? ""
+                    : "s"
+                }`;
 
         }
 
 
-        // Display table
+        /* =========================
+           DISPLAY TABLE
+        ========================= */
 
         function displayAttendance(data) {
 
@@ -962,7 +1524,10 @@
                 );
 
 
-            if (!data || data.length === 0) {
+            if (
+                !data ||
+                data.length === 0
+            ) {
 
                 table.innerHTML = `
                     <tr>
@@ -976,7 +1541,6 @@
                 `;
 
                 return;
-
             }
 
 
@@ -1070,7 +1634,9 @@
         }
 
 
-        // Date heading
+        /* =========================
+           DATE HEADING
+        ========================= */
 
         function updateDateText(date) {
 
@@ -1088,7 +1654,6 @@
                     : "Today's attendance";
 
                 return;
-
             }
 
 
@@ -1115,7 +1680,9 @@
         }
 
 
-        // Search
+        /* =========================
+           SEARCH
+        ========================= */
 
         document
             .getElementById(
@@ -1180,7 +1747,9 @@
             );
 
 
-        // Date change
+        /* =========================
+           DATE CHANGE
+        ========================= */
 
         document
             .getElementById(
@@ -1192,7 +1761,9 @@
             );
 
 
-        // Escape HTML
+        /* =========================
+           ESCAPE HTML
+        ========================= */
 
         function escapeHtml(value) {
 
@@ -1223,7 +1794,9 @@
         }
 
 
-        // Start
+        /* =========================
+           START
+        ========================= */
 
         setTodayDate();
 
