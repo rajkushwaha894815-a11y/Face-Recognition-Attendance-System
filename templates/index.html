@@ -2,10 +2,11 @@
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Face Attendance Dashboard</title>
+    <title>FaceAttend | Smart Attendance System</title>
 
     <link
         rel="stylesheet"
@@ -13,59 +14,1147 @@
     >
 
     <style>
-        .logout-btn {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            width: 100%;
-            margin-top: 14px;
-            padding: 11px 14px;
-            border: 1px solid rgba(255,255,255,.12);
-            border-radius: 9px;
-            background: rgba(255,255,255,.06);
-            color: white;
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: 600;
-            transition: .2s;
+
+        /* =====================================================
+           PREMIUM PORTFOLIO STYLE
+        ===================================================== */
+
+        :root {
+            --bg: #03070c;
+            --bg-2: #07131e;
+            --panel: rgba(9, 24, 37, 0.78);
+            --panel-light: rgba(14, 35, 51, 0.72);
+
+            --cyan: #62ecff;
+            --cyan-2: #25d9ff;
+            --blue: #438dff;
+
+            --white: #f5fbff;
+            --text: #d8e7ef;
+            --muted: #829aaa;
+
+            --green: #42e39a;
+            --red: #ff6478;
+            --purple: #a98cff;
+
+            --border: rgba(98, 236, 255, 0.16);
+
+            --shadow:
+                0 25px 70px rgba(0, 0, 0, 0.42);
         }
+
+
+        /* =====================================================
+           GLOBAL
+        ===================================================== */
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+
+            margin: 0;
+
+            background:
+                radial-gradient(
+                    circle at 78% 8%,
+                    rgba(65, 222, 255, 0.16),
+                    transparent 25%
+                ),
+
+                radial-gradient(
+                    circle at 15% 55%,
+                    rgba(0, 150, 255, 0.08),
+                    transparent 28%
+                ),
+
+                linear-gradient(
+                    135deg,
+                    #020509,
+                    #07131e 48%,
+                    #02060a
+                ) !important;
+
+            color: var(--white) !important;
+
+            min-height: 100vh;
+        }
+
+
+        body::before {
+
+            content: "";
+
+            position: fixed;
+
+            width: 500px;
+            height: 500px;
+
+            right: -220px;
+            top: 160px;
+
+            border:
+                1px solid
+                rgba(98, 236, 255, 0.07);
+
+            border-radius: 50%;
+
+            box-shadow:
+
+                0 0 0 45px
+                rgba(98, 236, 255, 0.025),
+
+                0 0 0 90px
+                rgba(98, 236, 255, 0.015);
+
+            pointer-events: none;
+
+            z-index: 0;
+        }
+
+
+        /* =====================================================
+           DASHBOARD
+        ===================================================== */
+
+        .dashboard {
+            position: relative;
+            z-index: 1;
+        }
+
+
+        /* =====================================================
+           SIDEBAR
+        ===================================================== */
+
+        .sidebar {
+
+            background:
+                rgba(2, 8, 14, 0.92) !important;
+
+            border-right:
+                1px solid
+                rgba(98, 236, 255, 0.11) !important;
+
+            backdrop-filter: blur(25px);
+
+            box-shadow:
+                15px 0 60px rgba(0, 0, 0, 0.28);
+        }
+
+
+        .logo {
+
+            border-bottom:
+                1px solid
+                rgba(98, 236, 255, 0.08) !important;
+        }
+
+
+        .logo-icon {
+
+            background:
+                rgba(98, 236, 255, 0.055) !important;
+
+            border:
+                1px solid
+                rgba(98, 236, 255, 0.65) !important;
+
+            color:
+                var(--cyan) !important;
+
+            box-shadow:
+
+                0 0 25px
+                rgba(98, 236, 255, 0.15),
+
+                inset 0 0 15px
+                rgba(98, 236, 255, 0.05);
+        }
+
+
+        .logo h2 {
+
+            color:
+                var(--white) !important;
+
+            letter-spacing:
+                0.04em;
+        }
+
+
+        .logo span {
+
+            color:
+                #6f8798 !important;
+        }
+
+
+        /* =====================================================
+           NAVIGATION
+        ===================================================== */
+
+        .nav-item {
+
+            position: relative;
+
+            color:
+                #8198a9 !important;
+
+            border:
+                1px solid transparent;
+
+            transition:
+                all .25s ease;
+        }
+
+
+        .nav-item:hover {
+
+            color:
+                white !important;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    rgba(98, 236, 255, 0.11),
+                    rgba(98, 236, 255, 0.02)
+                ) !important;
+
+            border-color:
+                rgba(98, 236, 255, 0.12);
+        }
+
+
+        .nav-item.active {
+
+            color:
+                white !important;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    rgba(98, 236, 255, 0.15),
+                    rgba(98, 236, 255, 0.025)
+                ) !important;
+
+            border-color:
+                rgba(98, 236, 255, 0.20);
+
+            box-shadow:
+
+                inset 3px 0 0
+                var(--cyan),
+
+                0 0 30px
+                rgba(98, 236, 255, 0.05);
+        }
+
+
+        .made-by {
+
+            margin-left: auto;
+
+            color:
+                var(--cyan) !important;
+
+            font-size:
+                9px !important;
+
+            letter-spacing:
+                .08em;
+
+            text-transform:
+                uppercase;
+        }
+
+
+        /* =====================================================
+           ADMIN
+        ===================================================== */
+
+        .admin-box {
+
+            border-top:
+                1px solid
+                rgba(255,255,255,.07) !important;
+        }
+
+
+        .admin-avatar {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--cyan),
+                    var(--blue)
+                ) !important;
+
+            color:
+                #021018 !important;
+
+            box-shadow:
+                0 0 25px
+                rgba(98,236,255,.18);
+        }
+
+
+        .admin-box strong {
+            color: white !important;
+        }
+
+
+        .admin-box small {
+            color: #6f8798 !important;
+        }
+
+
+        /* =====================================================
+           LOGOUT
+        ===================================================== */
+
+        .logout-btn {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 9px;
+
+            width: 100%;
+
+            margin-top: 14px;
+
+            padding: 11px 14px;
+
+            border:
+                1px solid
+                rgba(255,255,255,.08);
+
+            border-radius: 9px;
+
+            background:
+                rgba(255,255,255,.025);
+
+            color:
+                #91a5b5;
+
+            text-decoration: none;
+
+            font-size: 13px;
+
+            font-weight: 600;
+
+            transition:
+                all .25s ease;
+        }
+
 
         .logout-btn:hover {
-            background: rgba(255,255,255,.12);
+
+            background:
+                rgba(255,80,100,.08);
+
+            border-color:
+                rgba(255,80,100,.25);
+
+            color:
+                white;
         }
 
+
+        /* =====================================================
+           MAIN
+        ===================================================== */
+
+        .main-content {
+
+            position: relative;
+
+            background:
+                transparent !important;
+        }
+
+
+        /* =====================================================
+           TOP BAR
+        ===================================================== */
+
+        .topbar {
+
+            position: relative;
+
+            z-index: 2;
+
+            border-bottom:
+                1px solid
+                rgba(98,236,255,.08) !important;
+        }
+
+
+        .topbar h1 {
+
+            color:
+                white !important;
+
+            font-size:
+                42px !important;
+
+            font-weight:
+                800 !important;
+
+            letter-spacing:
+                -.055em;
+        }
+
+
+        .topbar h1::after {
+
+            content:
+                ".";
+
+            color:
+                var(--cyan);
+        }
+
+
+        .topbar p {
+
+            color:
+                var(--muted) !important;
+        }
+
+
+        /* =====================================================
+           DATE + NOTIFICATION
+        ===================================================== */
+
+        .date-box,
         .notification {
-            cursor: default;
+
+            background:
+                rgba(7,19,29,.72) !important;
+
+            border:
+                1px solid
+                rgba(98,236,255,.14) !important;
+
+            color:
+                #9eb4c3 !important;
+
+            backdrop-filter:
+                blur(16px);
+
+            box-shadow:
+                0 10px 35px
+                rgba(0,0,0,.18);
         }
 
-        .history-message {
-            padding: 28px;
-            text-align: center;
-            color: #6b7280;
+
+        /* =====================================================
+           STATS
+        ===================================================== */
+
+        .stats-grid {
+
+            position:
+                relative;
+
+            z-index:
+                2;
+
+            border:
+                1px solid
+                rgba(98,236,255,.15) !important;
+
+            border-radius:
+                18px !important;
+
+            overflow:
+                hidden;
+
+            background:
+                rgba(4,12,20,.62) !important;
+
+            box-shadow:
+                var(--shadow);
         }
 
+
+        .stat-card {
+
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(17,39,56,.82),
+                    rgba(5,14,23,.68)
+                ) !important;
+
+            border-right:
+                1px solid
+                rgba(98,236,255,.08) !important;
+
+            transition:
+                all .3s ease;
+        }
+
+
+        .stat-card:hover {
+
+            transform:
+                translateY(-4px);
+
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(23,53,72,.88),
+                    rgba(6,17,28,.75)
+                ) !important;
+
+            box-shadow:
+                0 20px 45px
+                rgba(0,0,0,.25);
+        }
+
+
+        .stat-icon {
+
+            background:
+                rgba(98,236,255,.045) !important;
+
+            border:
+                1px solid
+                rgba(98,236,255,.17);
+
+            color:
+                var(--cyan) !important;
+        }
+
+
+        .present-icon {
+            color:
+                var(--green) !important;
+        }
+
+
+        .absent-icon {
+            color:
+                var(--red) !important;
+        }
+
+
+        .rate-icon {
+            color:
+                var(--purple) !important;
+        }
+
+
+        .stat-info span {
+
+            color:
+                #8197a8 !important;
+
+            text-transform:
+                uppercase;
+
+            letter-spacing:
+                .07em;
+        }
+
+
+        .stat-info strong {
+
+            color:
+                white !important;
+
+            font-size:
+                30px !important;
+        }
+
+
+        .stat-info small {
+
+            color:
+                #607889 !important;
+        }
+
+
+        /* =====================================================
+           PANELS
+        ===================================================== */
+
+        .panel {
+
+            position:
+                relative;
+
+            overflow:
+                hidden;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(12,29,43,.86),
+                    rgba(4,11,18,.82)
+                ) !important;
+
+            border:
+                1px solid
+                rgba(98,236,255,.15) !important;
+
+            border-radius:
+                19px !important;
+
+            box-shadow:
+                var(--shadow);
+
+            backdrop-filter:
+                blur(18px);
+        }
+
+
+        .panel::before {
+
+            content:
+                "";
+
+            position:
+                absolute;
+
+            left:
+                0;
+
+            top:
+                0;
+
+            width:
+                100%;
+
+            height:
+                1px;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    transparent,
+                    rgba(98,236,255,.50),
+                    transparent
+                );
+
+            pointer-events:
+                none;
+        }
+
+
+        .panel-header h2 {
+
+            color:
+                #effaff !important;
+        }
+
+
+        .panel-header p {
+
+            color:
+                #718899 !important;
+        }
+
+
+        /* =====================================================
+           LIVE BADGE
+        ===================================================== */
+
+        .live-badge {
+
+            background:
+                rgba(66,227,154,.045) !important;
+
+            border:
+                1px solid
+                rgba(66,227,154,.24);
+
+            color:
+                var(--green) !important;
+
+            box-shadow:
+                0 0 20px
+                rgba(66,227,154,.07);
+        }
+
+
+        /* =====================================================
+           CAMERA
+        ===================================================== */
+
+        .camera-container {
+
+            position:
+                relative;
+
+            overflow:
+                hidden;
+
+            background:
+                #010509 !important;
+
+            border:
+                1px solid
+                rgba(98,236,255,.18);
+
+            box-shadow:
+
+                inset 0 0 80px
+                rgba(0,220,255,.06),
+
+                0 0 40px
+                rgba(0,220,255,.04);
+        }
+
+
+        .camera-container::before,
+        .camera-container::after {
+
+            content:
+                "";
+
+            position:
+                absolute;
+
+            width:
+                65px;
+
+            height:
+                65px;
+
+            z-index:
+                5;
+
+            pointer-events:
+                none;
+        }
+
+
+        .camera-container::before {
+
+            top:
+                14px;
+
+            left:
+                14px;
+
+            border-top:
+                2px solid
+                var(--cyan);
+
+            border-left:
+                2px solid
+                var(--cyan);
+
+            box-shadow:
+                -5px -5px 20px
+                rgba(98,236,255,.10);
+        }
+
+
+        .camera-container::after {
+
+            right:
+                14px;
+
+            bottom:
+                14px;
+
+            border-right:
+                2px solid
+                var(--cyan);
+
+            border-bottom:
+                2px solid
+                var(--cyan);
+        }
+
+
+        /* =====================================================
+           CAMERA FACE FRAME
+        ===================================================== */
+
+        .face-frame {
+
+            border:
+                1px solid
+                rgba(98,236,255,.78) !important;
+
+            box-shadow:
+
+                0 0 30px
+                rgba(98,236,255,.17),
+
+                inset 0 0 25px
+                rgba(98,236,255,.05);
+        }
+
+
+        .camera-overlay::before {
+
+            content:
+                "";
+
+            position:
+                absolute;
+
+            width:
+                270px;
+
+            height:
+                270px;
+
+            border:
+                1px solid
+                rgba(98,236,255,.13);
+
+            border-radius:
+                50%;
+
+            box-shadow:
+
+                0 0 0 35px
+                rgba(98,236,255,.025),
+
+                0 0 0 70px
+                rgba(98,236,255,.014);
+        }
+
+
+        #status {
+
+            color:
+                #a1b6c5 !important;
+
+            font-weight:
+                500;
+        }
+
+
+        /* =====================================================
+           SCAN BUTTON
+        ===================================================== */
+
+        .scan-button {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--cyan),
+                    var(--blue)
+                ) !important;
+
+            color:
+                #021019 !important;
+
+            border:
+                0 !important;
+
+            border-radius:
+                10px !important;
+
+            font-weight:
+                700;
+
+            box-shadow:
+                0 0 30px
+                rgba(98,236,255,.13);
+
+            transition:
+                all .25s ease;
+        }
+
+
+        .scan-button:hover {
+
+            transform:
+                translateY(-2px);
+
+            box-shadow:
+                0 0 45px
+                rgba(98,236,255,.27);
+        }
+
+
+        /* =====================================================
+           QUICK ACTIONS
+        ===================================================== */
+
+        .action-card {
+
+            background:
+                rgba(255,255,255,.018) !important;
+
+            border:
+                1px solid
+                rgba(98,236,255,.10) !important;
+
+            color:
+                white !important;
+
+            transition:
+                all .25s ease;
+        }
+
+
+        .action-card:hover {
+
+            transform:
+                translateX(5px);
+
+            background:
+                linear-gradient(
+                    90deg,
+                    rgba(98,236,255,.08),
+                    rgba(98,236,255,.012)
+                ) !important;
+
+            border-color:
+                rgba(98,236,255,.28) !important;
+
+            box-shadow:
+                0 0 30px
+                rgba(98,236,255,.045);
+        }
+
+
+        .action-icon {
+
+            background:
+                rgba(98,236,255,.045) !important;
+
+            border:
+                1px solid
+                rgba(98,236,255,.16);
+
+            color:
+                var(--cyan) !important;
+        }
+
+
+        .action-card strong {
+
+            color:
+                white !important;
+        }
+
+
+        .action-card span {
+
+            color:
+                #718899 !important;
+        }
+
+
+        .action-card b {
+
+            color:
+                var(--cyan) !important;
+        }
+
+
+        /* =====================================================
+           SEARCH
+        ===================================================== */
+
+        .search-box {
+
+            background:
+                rgba(2,9,16,.65) !important;
+
+            border:
+                1px solid
+                rgba(98,236,255,.14) !important;
+
+            backdrop-filter:
+                blur(10px);
+        }
+
+
+        .search-box input {
+
+            color:
+                white !important;
+
+            background:
+                transparent !important;
+        }
+
+
+        .search-box input::placeholder {
+
+            color:
+                #607687 !important;
+        }
+
+
+        /* =====================================================
+           TABLE
+        ===================================================== */
+
+        table {
+
+            background:
+                transparent !important;
+        }
+
+
+        th {
+
+            background:
+                rgba(2,8,14,.45) !important;
+
+            color:
+                #718797 !important;
+
+            text-transform:
+                uppercase;
+
+            letter-spacing:
+                .06em;
+        }
+
+
+        td {
+
+            color:
+                #c5d5df !important;
+
+            border-bottom:
+                1px solid
+                rgba(98,236,255,.065) !important;
+        }
+
+
+        tr:hover td {
+
+            background:
+                rgba(98,236,255,.025) !important;
+        }
+
+
+        .status-present {
+
+            background:
+                rgba(66,227,154,.055) !important;
+
+            border:
+                1px solid
+                rgba(66,227,154,.20);
+
+            color:
+                var(--green) !important;
+        }
+
+
+        /* =====================================================
+           HISTORY
+        ===================================================== */
+
+        .history-message,
         .status-message {
-            padding: 18px;
-            text-align: center;
-            color: #6b7280;
+
+            color:
+                #718899 !important;
         }
+
+
+        /* =====================================================
+           FOOTER
+        ===================================================== */
+
+        footer {
+
+            color:
+                #536a7b !important;
+
+            border-top:
+                1px solid
+                rgba(98,236,255,.07);
+        }
+
+
+        /* =====================================================
+           RESPONSIVE
+        ===================================================== */
+
+        @media (max-width: 1100px) {
+
+            .stats-grid {
+                grid-template-columns:
+                    repeat(2, 1fr);
+            }
+
+        }
+
+
+        @media (max-width: 768px) {
+
+            .topbar h1 {
+                font-size:
+                    32px !important;
+            }
+
+            .made-by {
+                display:
+                    none;
+            }
+
+        }
+
+
+        @media (max-width: 520px) {
+
+            .topbar h1 {
+                font-size:
+                    28px !important;
+            }
+
+        }
+
     </style>
+
 </head>
+
 
 <body>
 
+
 <div class="dashboard">
 
-    <!-- SIDEBAR -->
+
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+
     <aside class="sidebar">
+
 
         <div class="logo">
 
-            <div class="logo-icon">✓</div>
+            <div class="logo-icon">
+                ✓
+            </div>
 
             <div>
-                <h2>FaceAttend</h2>
-                <span>Attendance System</span>
+
+                <h2>
+                    FaceAttend
+                </h2>
+
+                <span>
+                    Smart Attendance
+                </span>
+
             </div>
 
         </div>
@@ -73,73 +1162,142 @@
 
         <nav>
 
-            <a href="/" class="nav-item active">
-                <span>🏠</span>
+
+            <a
+                href="/"
+                class="nav-item active"
+            >
+
+                <span>
+                    ⌂
+                </span>
+
                 Dashboard
+
+                <small class="made-by">
+                    Made by Raj
+                </small>
+
             </a>
 
 
-            <a href="/students" class="nav-item">
-                <span>👥</span>
+            <a
+                href="/students"
+                class="nav-item"
+            >
+
+                <span>
+                    👥
+                </span>
+
                 Students
+
             </a>
 
 
-            <a href="/attendance" class="nav-item">
-                <span>✅</span>
+            <a
+                href="/attendance"
+                class="nav-item"
+            >
+
+                <span>
+                    ✓
+                </span>
+
                 Attendance
+
             </a>
 
 
-            <a href="#history" class="nav-item">
-                <span>📅</span>
+            <a
+                href="#history"
+                class="nav-item"
+            >
+
+                <span>
+                    ◷
+                </span>
+
                 History
+
             </a>
+
 
         </nav>
 
 
         <div class="sidebar-bottom">
 
+
             <div class="admin-box">
+
 
                 <div class="admin-avatar">
                     A
                 </div>
 
+
                 <div>
-                    <strong>Admin</strong>
-                    <small>Administrator</small>
+
+                    <strong>
+                        Admin
+                    </strong>
+
+                    <small>
+                        Administrator
+                    </small>
+
                 </div>
+
 
             </div>
 
 
-            <!-- LOGOUT -->
             <a
                 href="/logout"
                 class="logout-btn"
-                onclick="return confirm('Are you sure you want to logout?');"
+                onclick="
+                    return confirm(
+                        'Are you sure you want to logout?'
+                    );
+                "
             >
-                <span>🚪</span>
+
+                <span>
+                    ⇥
+                </span>
+
                 Logout
+
             </a>
 
+
         </div>
+
 
     </aside>
 
 
-    <!-- MAIN CONTENT -->
+
+    <!-- =====================================================
+         MAIN CONTENT
+    ====================================================== -->
+
     <main class="main-content">
 
 
-        <!-- TOP BAR -->
+        <!-- =================================================
+             TOP BAR
+        ================================================== -->
+
         <header class="topbar">
+
 
             <div>
 
-                <h1>Dashboard</h1>
+                <h1>
+                    Dashboard
+                </h1>
 
                 <p>
                     Welcome back! Here's today's attendance overview.
@@ -150,9 +1308,12 @@
 
             <div class="topbar-right">
 
+
                 <div class="date-box">
 
-                    📅
+                    <span>
+                        ◷
+                    </span>
 
                     <span id="currentDate">
                         Today
@@ -162,24 +1323,31 @@
 
 
                 <div class="notification">
-                    🔔
+                    ◉
                 </div>
 
+
             </div>
+
 
         </header>
 
 
 
-        <!-- STAT CARDS -->
+        <!-- =================================================
+             STAT CARDS
+        ================================================== -->
+
         <section class="stats-grid">
 
 
             <div class="stat-card">
 
+
                 <div class="stat-icon students-icon">
                     👥
                 </div>
+
 
                 <div class="stat-info">
 
@@ -197,15 +1365,18 @@
 
                 </div>
 
+
             </div>
 
 
 
             <div class="stat-card">
 
+
                 <div class="stat-icon present-icon">
                     ✓
                 </div>
+
 
                 <div class="stat-info">
 
@@ -223,15 +1394,18 @@
 
                 </div>
 
+
             </div>
 
 
 
             <div class="stat-card">
 
+
                 <div class="stat-icon absent-icon">
                     ✕
                 </div>
+
 
                 <div class="stat-info">
 
@@ -249,15 +1423,18 @@
 
                 </div>
 
+
             </div>
 
 
 
             <div class="stat-card">
 
+
                 <div class="stat-icon rate-icon">
                     %
                 </div>
+
 
                 <div class="stat-info">
 
@@ -275,20 +1452,28 @@
 
                 </div>
 
+
             </div>
+
 
         </section>
 
 
 
-        <!-- CAMERA + QUICK ACTIONS -->
+        <!-- =================================================
+             CAMERA + QUICK ACTIONS
+        ================================================== -->
+
         <section class="dashboard-grid">
 
 
             <!-- CAMERA -->
+
             <div class="panel camera-panel">
 
+
                 <div class="panel-header">
+
 
                     <div>
 
@@ -307,11 +1492,13 @@
                         ● LIVE
                     </span>
 
+
                 </div>
 
 
 
                 <div class="camera-container">
+
 
                     <video
                         id="video"
@@ -332,6 +1519,7 @@
 
                     </div>
 
+
                 </div>
 
 
@@ -349,17 +1537,21 @@
                     style="display:none;"
                     type="button"
                 >
-                    Scan Next Student
+                    Scan Next Student →
                 </button>
+
 
             </div>
 
 
 
             <!-- QUICK ACTIONS -->
+
             <div class="panel quick-panel">
 
+
                 <div class="panel-header">
+
 
                     <div>
 
@@ -373,6 +1565,7 @@
 
                     </div>
 
+
                 </div>
 
 
@@ -383,8 +1576,9 @@
                 >
 
                     <div class="action-icon">
-                        ➕
+                        +
                     </div>
+
 
                     <div>
 
@@ -397,6 +1591,7 @@
                         </span>
 
                     </div>
+
 
                     <b>
                         →
@@ -412,8 +1607,9 @@
                 >
 
                     <div class="action-icon">
-                        📊
+                        ✓
                     </div>
+
 
                     <div>
 
@@ -426,6 +1622,7 @@
                         </span>
 
                     </div>
+
 
                     <b>
                         →
@@ -441,8 +1638,9 @@
                 >
 
                     <div class="action-icon">
-                        📅
+                        ◷
                     </div>
+
 
                     <div>
 
@@ -456,25 +1654,33 @@
 
                     </div>
 
+
                     <b>
                         →
                     </b>
 
                 </a>
 
+
             </div>
+
 
         </section>
 
 
 
-        <!-- TODAY'S ATTENDANCE -->
+        <!-- =================================================
+             TODAY'S ATTENDANCE
+        ================================================== -->
+
         <section
             class="panel attendance-panel"
             id="attendance"
         >
 
+
             <div class="panel-header table-header">
+
 
                 <div>
 
@@ -489,17 +1695,13 @@
                 </div>
 
 
-                <!--
-                    IMPORTANT:
-                    Search is handled by app.js.
-                    Do NOT add another search event listener here.
-                -->
-
                 <div class="search-box">
 
+
                     <span>
-                        🔍
+                        ⌕
                     </span>
+
 
                     <input
                         type="text"
@@ -507,7 +1709,9 @@
                         placeholder="Search name or enrollment ID..."
                     >
 
+
                 </div>
+
 
             </div>
 
@@ -515,7 +1719,9 @@
 
             <div class="table-wrapper">
 
+
                 <table>
+
 
                     <thead>
 
@@ -548,32 +1754,45 @@
 
                     <tbody id="records">
 
+
                         <tr>
+
                             <td
                                 colspan="5"
                                 class="status-message"
                             >
                                 Loading attendance...
+
                             </td>
+
                         </tr>
+
 
                     </tbody>
 
+
                 </table>
 
+
             </div>
+
 
         </section>
 
 
 
-        <!-- HISTORY -->
+        <!-- =================================================
+             HISTORY
+        ================================================== -->
+
         <section
             class="panel history-panel"
             id="history"
         >
 
+
             <div class="panel-header">
+
 
                 <div>
 
@@ -587,6 +1806,7 @@
 
                 </div>
 
+
             </div>
 
 
@@ -594,14 +1814,20 @@
                 id="historyContent"
                 class="history-message"
             >
-                📅 Loading attendance history...
+
+                ◷ Loading attendance history...
+
             </div>
+
 
         </section>
 
 
 
-        <!-- FOOTER -->
+        <!-- =================================================
+             FOOTER
+        ================================================== -->
+
         <footer>
 
             <span>
@@ -609,7 +1835,7 @@
             </span>
 
             <span>
-                Face Recognition Attendance System
+                Face Recognition Attendance System · Made by Raj
             </span>
 
         </footer>
@@ -617,11 +1843,15 @@
 
     </main>
 
+
 </div>
 
 
 
-<!-- APP JS -->
+<!-- =========================================================
+     APP JS
+========================================================= -->
+
 <script
     src="{{ url_for('static', filename='app.js') }}"
 ></script>
@@ -630,230 +1860,272 @@
 
 <script>
 
-    /*
-     * ONLY dashboard date.
-     *
-     * Search is intentionally NOT handled here.
-     * app.js handles the attendance search.
-     */
 
-    const dashboardDate =
+/* ============================================================
+   CURRENT DATE
+============================================================ */
+
+const dashboardDate =
+    document.getElementById(
+        "currentDate"
+    );
+
+
+if (dashboardDate) {
+
+    const today =
+        new Date();
+
+
+    dashboardDate.textContent =
+        today.toLocaleDateString(
+            "en-IN",
+            {
+                day: "2-digit",
+                month: "short",
+                year: "numeric"
+            }
+        );
+
+}
+
+
+
+/* ============================================================
+   DASHBOARD HISTORY
+============================================================ */
+
+async function loadDashboardHistory() {
+
+
+    const container =
         document.getElementById(
-            "currentDate"
+            "historyContent"
         );
 
 
-    if (dashboardDate) {
-
-        const today =
-            new Date();
-
-        dashboardDate.textContent =
-            today.toLocaleDateString(
-                "en-IN",
-                {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric"
-                }
-            );
-
+    if (!container) {
+        return;
     }
 
 
-    /*
-     * Load recent history.
-     *
-     * This uses the existing /api/history endpoint.
-     */
+    try {
 
-    async function loadDashboardHistory() {
 
-        const container =
-            document.getElementById(
-                "historyContent"
+        const response =
+            await fetch(
+                "/api/history",
+                {
+                    cache: "no-store"
+                }
             );
 
 
-        if (!container) {
-            return;
+        if (!response.ok) {
+
+            throw new Error(
+                "History request failed"
+            );
+
         }
 
 
-        try {
-
-            const response =
-                await fetch(
-                    "/api/history"
-                );
+        const result =
+            await response.json();
 
 
-            if (!response.ok) {
-
-                throw new Error(
-                    "History request failed"
-                );
-
-            }
+        const history =
+            Array.isArray(result.history)
+                ? result.history
+                : [];
 
 
-            const result =
-                await response.json();
-
-
-            const history =
-                result.history || [];
-
-
-            if (
-                !Array.isArray(history) ||
-                history.length === 0
-            ) {
-
-                container.innerHTML =
-                    "📅 No attendance history available yet.";
-
-                return;
-
-            }
-
-
-            const recent =
-                history.slice(0, 5);
-
+        if (history.length === 0) {
 
             container.innerHTML =
-                recent.map(
-                    record => {
+                "◷ No attendance history available yet.";
 
-                        const name =
-                            escapeDashboardHtml(
-                                record.name || "-"
-                            );
+            return;
+
+        }
 
 
-                        const enrollment =
-                            escapeDashboardHtml(
-                                record.enrollment_id || "-"
-                            );
+        const recent =
+            history.slice(0, 5);
 
 
-                        const date =
-                            escapeDashboardHtml(
-                                record.date ||
-                                record.attendance_date ||
-                                "-"
-                            );
+        container.innerHTML =
+
+            recent.map(
+                record => {
 
 
-                        const time =
-                            escapeDashboardHtml(
-                                record.time ||
-                                record.attendance_time ||
-                                "-"
-                            );
+                    const name =
+                        escapeDashboardHtml(
+                            record.name || "-"
+                        );
 
 
-                        return `
+                    const enrollment =
+                        escapeDashboardHtml(
+                            record.enrollment_id || "-"
+                        );
+
+
+                    const date =
+                        escapeDashboardHtml(
+                            record.date ||
+                            record.attendance_date ||
+                            "-"
+                        );
+
+
+                    const time =
+                        escapeDashboardHtml(
+                            record.time ||
+                            record.attendance_time ||
+                            "-"
+                        );
+
+
+                    return `
+
+                        <div style="
+                            display:flex;
+                            justify-content:space-between;
+                            align-items:center;
+                            gap:20px;
+                            padding:17px 5px;
+                            border-bottom:1px solid rgba(98,236,255,.07);
+                            text-align:left;
+                        ">
+
+
+                            <div>
+
+
+                                <strong style="
+                                    color:#f2fbff;
+                                    font-size:14px;
+                                ">
+                                    ${name}
+                                </strong>
+
+
+                                <div style="
+                                    font-size:12px;
+                                    color:#6f8798;
+                                    margin-top:5px;
+                                ">
+                                    ${enrollment}
+                                </div>
+
+
+                            </div>
+
+
                             <div style="
-                                display:flex;
-                                justify-content:space-between;
-                                align-items:center;
-                                gap:15px;
-                                padding:14px 0;
-                                border-bottom:1px solid #e5e7eb;
-                                text-align:left;
+                                text-align:right;
+                                font-size:12px;
+                                color:#718899;
                             ">
 
+
                                 <div>
-
-                                    <strong>
-                                        ${name}
-                                    </strong>
-
-                                    <div style="
-                                        font-size:12px;
-                                        color:#6b7280;
-                                        margin-top:4px;
-                                    ">
-                                        ${enrollment}
-                                    </div>
-
+                                    ${date}
                                 </div>
 
 
                                 <div style="
-                                    text-align:right;
-                                    font-size:13px;
-                                    color:#6b7280;
+                                    margin-top:4px;
+                                    color:#62ecff;
                                 ">
-
-                                    <div>
-                                        ${date}
-                                    </div>
-
-                                    <div>
-                                        ${time}
-                                    </div>
-
+                                    ${time}
                                 </div>
 
+
                             </div>
-                        `;
-
-                    }
-                ).join("");
 
 
-        } catch (error) {
+                        </div>
 
-            console.error(
-                "Dashboard history error:",
-                error
-            );
+                    `;
 
+                }
+            ).join("");
 
-            container.innerHTML =
-                "Unable to load attendance history.";
-
-        }
 
     }
 
 
-    function escapeDashboardHtml(value) {
+    catch (error) {
 
-        return String(
-            value ?? ""
-        )
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-        .replace(
-            /</g,
-            "&lt;"
-        )
-        .replace(
-            />/g,
-            "&gt;"
-        )
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-        .replace(
-            /'/g,
-            "&#039;"
+
+        console.error(
+            "Dashboard history error:",
+            error
         );
 
+
+        container.innerHTML =
+            "Unable to load attendance history.";
+
     }
 
+}
 
-    loadDashboardHistory();
+
+
+/* ============================================================
+   HTML ESCAPE
+============================================================ */
+
+function escapeDashboardHtml(value) {
+
+
+    return String(
+        value ?? ""
+    )
+
+    .replace(
+        /&/g,
+        "&amp;"
+    )
+
+    .replace(
+        /</g,
+        "&lt;"
+    )
+
+    .replace(
+        />/g,
+        "&gt;"
+    )
+
+    .replace(
+        /"/g,
+        "&quot;"
+    )
+
+    .replace(
+        /'/g,
+        "&#039;"
+    );
+
+}
+
+
+
+/* ============================================================
+   LOAD HISTORY
+============================================================ */
+
+loadDashboardHistory();
+
 
 </script>
 
 
 </body>
+
 </html>
