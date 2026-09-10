@@ -1,114 +1,1360 @@
-<!doctype html>
-
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-```
-<title>Enroll Student</title>
+    <title>Enroll Student | FaceAttend</title>
 
-<link rel="stylesheet"
-      href="{{ url_for('static', filename='style.css') }}">
-```
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
 
+    <style>
+        /* =========================================
+           ENROLL PAGE
+        ========================================= */
+
+        .enroll-page {
+            min-height: 100vh;
+            padding: 30px;
+            background:
+                radial-gradient(
+                    circle at 15% 10%,
+                    rgba(59, 130, 246, 0.10),
+                    transparent 28%
+                ),
+                radial-gradient(
+                    circle at 85% 80%,
+                    rgba(168, 85, 247, 0.08),
+                    transparent 30%
+                ),
+                #050505;
+        }
+
+        /* =========================================
+           TOP HEADER
+        ========================================= */
+
+        .enroll-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+        }
+
+        .page-title h1 {
+            margin: 0;
+            font-size: 30px;
+            font-weight: 800;
+            color: #f5f5f5;
+            letter-spacing: -0.5px;
+        }
+
+        .page-title p {
+            margin: 7px 0 0;
+            color: #8b8b8b;
+            font-size: 14px;
+        }
+
+        .back-dashboard {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 11px 17px;
+            border: 1px solid #292929;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.04);
+            color: #e5e7eb;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            transition: 0.25s ease;
+        }
+
+        .back-dashboard:hover {
+            background: rgba(59, 130, 246, 0.12);
+            border-color: rgba(59, 130, 246, 0.5);
+            transform: translateY(-2px);
+        }
+
+        /* =========================================
+           MAIN GRID
+        ========================================= */
+
+        .enroll-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.1fr) minmax(350px, 0.9fr);
+            gap: 24px;
+            max-width: 1250px;
+            margin: 0 auto;
+        }
+
+        /* =========================================
+           CARD
+        ========================================= */
+
+        .enroll-card {
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(255, 255, 255, 0.055),
+                    rgba(255, 255, 255, 0.018)
+                );
+
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            border-radius: 20px;
+            padding: 26px;
+
+            box-shadow:
+                0 20px 60px rgba(0, 0, 0, 0.35),
+                inset 0 1px 0 rgba(255, 255, 255, 0.03);
+
+            backdrop-filter: blur(18px);
+        }
+
+        .card-heading {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            margin-bottom: 25px;
+        }
+
+        .card-heading-icon {
+            width: 46px;
+            height: 46px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 13px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(59, 130, 246, 0.22),
+                    rgba(168, 85, 247, 0.18)
+                );
+
+            border: 1px solid rgba(96, 165, 250, 0.2);
+
+            font-size: 21px;
+        }
+
+        .card-heading h2 {
+            margin: 0;
+            color: #f5f5f5;
+            font-size: 19px;
+        }
+
+        .card-heading p {
+            margin: 4px 0 0;
+            color: #777;
+            font-size: 12px;
+        }
+
+        /* =========================================
+           FORM
+        ========================================= */
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #d4d4d4;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .required {
+            color: #60a5fa;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 13px 14px;
+
+            border: 1px solid #292929;
+            border-radius: 11px;
+
+            background: rgba(255, 255, 255, 0.045);
+            color: #f5f5f5;
+
+            outline: none;
+            font-size: 14px;
+
+            transition: 0.25s ease;
+        }
+
+        .form-input::placeholder {
+            color: #666;
+        }
+
+        .form-input:focus {
+            border-color: #3b82f6;
+
+            box-shadow:
+                0 0 0 3px rgba(59, 130, 246, 0.10),
+                0 0 25px rgba(59, 130, 246, 0.08);
+        }
+
+        /* =========================================
+           CAMERA SECTION
+        ========================================= */
+
+        .camera-section {
+            margin-top: 25px;
+        }
+
+        .camera-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .camera-label strong {
+            color: #e5e7eb;
+            font-size: 14px;
+        }
+
+        .camera-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+
+            padding: 5px 9px;
+            border-radius: 20px;
+
+            background: rgba(239, 68, 68, 0.10);
+            color: #f87171;
+
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .camera-status.active {
+            background: rgba(34, 197, 94, 0.10);
+            color: #4ade80;
+        }
+
+        .camera-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        /* =========================================
+           CAMERA BOX
+        ========================================= */
+
+        .camera-box {
+            position: relative;
+            width: 100%;
+            min-height: 300px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            overflow: hidden;
+
+            border: 1px solid #292929;
+            border-radius: 17px;
+
+            background:
+                radial-gradient(
+                    circle at center,
+                    rgba(59, 130, 246, 0.08),
+                    transparent 45%
+                ),
+                #080808;
+        }
+
+        .camera-box.active {
+            border-color: rgba(59, 130, 246, 0.35);
+
+            box-shadow:
+                0 0 30px rgba(59, 130, 246, 0.08),
+                inset 0 0 40px rgba(59, 130, 246, 0.03);
+        }
+
+        #camera {
+            width: 100%;
+            max-height: 420px;
+            object-fit: cover;
+            border-radius: 16px;
+        }
+
+        .camera-placeholder {
+            text-align: center;
+            color: #666;
+            padding: 40px 20px;
+        }
+
+        .camera-placeholder-icon {
+            width: 70px;
+            height: 70px;
+
+            margin: 0 auto 15px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 20px;
+
+            background: rgba(255, 255, 255, 0.045);
+            border: 1px solid #292929;
+
+            font-size: 30px;
+        }
+
+        .camera-placeholder strong {
+            display: block;
+            color: #aaa;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .camera-placeholder span {
+            font-size: 12px;
+        }
+
+        /* =========================================
+           CAMERA FRAME
+        ========================================= */
+
+        .face-guide {
+            position: absolute;
+            width: 180px;
+            height: 220px;
+
+            border: 2px solid rgba(96, 165, 250, 0.65);
+            border-radius: 48%;
+
+            pointer-events: none;
+
+            box-shadow:
+                0 0 25px rgba(59, 130, 246, 0.12);
+        }
+
+        .face-guide::before {
+            content: "";
+            position: absolute;
+
+            top: 50%;
+            left: -20px;
+            right: -20px;
+
+            height: 1px;
+
+            background: rgba(96, 165, 250, 0.28);
+        }
+
+        /* =========================================
+           CAMERA BUTTONS
+        ========================================= */
+
+        .camera-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-top: 13px;
+        }
+
+        .camera-btn {
+            border: 1px solid #2d2d2d;
+            border-radius: 10px;
+
+            padding: 11px 10px;
+
+            cursor: pointer;
+
+            background: rgba(255, 255, 255, 0.045);
+            color: #ddd;
+
+            font-size: 12px;
+            font-weight: 700;
+
+            transition: 0.25s ease;
+        }
+
+        .camera-btn:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.08);
+            border-color: #3b82f6;
+        }
+
+        .camera-btn.start:hover {
+            color: #60a5fa;
+        }
+
+        .camera-btn.stop:hover {
+            color: #f87171;
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+
+        .camera-btn.capture {
+            background:
+                linear-gradient(
+                    135deg,
+                    #2563eb,
+                    #7c3aed
+                );
+
+            border-color: transparent;
+            color: white;
+        }
+
+        .camera-btn.capture:hover {
+            box-shadow:
+                0 8px 25px rgba(59, 130, 246, 0.25);
+        }
+
+        /* =========================================
+           OR DIVIDER
+        ========================================= */
+
+        .or-divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 23px 0;
+            color: #666;
+            font-size: 12px;
+        }
+
+        .or-divider::before,
+        .or-divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: #262626;
+        }
+
+        /* =========================================
+           UPLOAD
+        ========================================= */
+
+        .upload-area {
+            position: relative;
+
+            padding: 22px;
+
+            border: 1px dashed #363636;
+            border-radius: 14px;
+
+            background: rgba(255, 255, 255, 0.025);
+
+            text-align: center;
+
+            transition: 0.25s ease;
+        }
+
+        .upload-area:hover {
+            border-color: rgba(59, 130, 246, 0.5);
+            background: rgba(59, 130, 246, 0.035);
+        }
+
+        .upload-icon {
+            font-size: 27px;
+            margin-bottom: 7px;
+        }
+
+        .upload-area strong {
+            display: block;
+            color: #ddd;
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+
+        .upload-area span {
+            display: block;
+            color: #666;
+            font-size: 11px;
+            margin-bottom: 14px;
+        }
+
+        #photo {
+            width: 100%;
+            color: #999;
+            font-size: 12px;
+        }
+
+        #photo::file-selector-button {
+            border: 1px solid #333;
+            border-radius: 8px;
+
+            padding: 9px 13px;
+            margin-right: 10px;
+
+            background: #171717;
+            color: #ddd;
+
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        #photo::file-selector-button:hover {
+            background: #222;
+            border-color: #3b82f6;
+        }
+
+        /* =========================================
+           PREVIEW
+        ========================================= */
+
+        .preview-section {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .preview-title {
+            color: #aaa;
+            font-size: 12px;
+            margin-bottom: 9px;
+        }
+
+        .preview-wrapper {
+            position: relative;
+            width: 150px;
+            height: 150px;
+        }
+
+        #preview {
+            width: 150px;
+            height: 150px;
+
+            object-fit: cover;
+
+            border-radius: 16px;
+
+            border: 2px solid rgba(59, 130, 246, 0.35);
+
+            box-shadow:
+                0 10px 30px rgba(0, 0, 0, 0.35);
+        }
+
+        .preview-check {
+            position: absolute;
+            right: -6px;
+            bottom: -6px;
+
+            width: 30px;
+            height: 30px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 50%;
+
+            background: #22c55e;
+            color: white;
+
+            border: 3px solid #0d0d0d;
+
+            font-size: 13px;
+        }
+
+        /* =========================================
+           SAVE BUTTON
+        ========================================= */
+
+        .save-button {
+            width: 100%;
+
+            margin-top: 23px;
+
+            padding: 14px 18px;
+
+            border: none;
+            border-radius: 12px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #2563eb,
+                    #7c3aed
+                );
+
+            color: white;
+
+            font-size: 14px;
+            font-weight: 800;
+
+            cursor: pointer;
+
+            transition: 0.25s ease;
+
+            box-shadow:
+                0 10px 30px rgba(59, 130, 246, 0.15);
+        }
+
+        .save-button:hover {
+            transform: translateY(-2px);
+
+            box-shadow:
+                0 15px 35px rgba(59, 130, 246, 0.25);
+        }
+
+        .save-button:active {
+            transform: translateY(0);
+        }
+
+        /* =========================================
+           MESSAGE
+        ========================================= */
+
+        #message {
+            min-height: 22px;
+            margin: 14px 0 0;
+
+            text-align: center;
+
+            color: #9ca3af;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* =========================================
+           RIGHT INFO CARD
+        ========================================= */
+
+        .info-card {
+            height: fit-content;
+        }
+
+        .info-list {
+            display: flex;
+            flex-direction: column;
+            gap: 13px;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 13px;
+            padding: 14px;
+
+            border: 1px solid #252525;
+            border-radius: 13px;
+
+            background: rgba(255, 255, 255, 0.025);
+        }
+
+        .info-icon {
+            flex-shrink: 0;
+
+            width: 38px;
+            height: 38px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 10px;
+
+            background: rgba(59, 130, 246, 0.10);
+
+            font-size: 17px;
+        }
+
+        .info-item strong {
+            display: block;
+            color: #ddd;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .info-item span {
+            color: #707070;
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        /* =========================================
+           SECURITY CARD
+        ========================================= */
+
+        .security-card {
+            margin-top: 20px;
+
+            padding: 17px;
+
+            border-radius: 14px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(34, 197, 94, 0.07),
+                    rgba(59, 130, 246, 0.04)
+                );
+
+            border: 1px solid rgba(34, 197, 94, 0.15);
+        }
+
+        .security-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            color: #4ade80;
+
+            font-size: 12px;
+            font-weight: 700;
+
+            margin-bottom: 6px;
+        }
+
+        .security-card p {
+            margin: 0;
+            color: #777;
+            font-size: 11px;
+            line-height: 1.6;
+        }
+
+        /* =========================================
+           FOOTER
+        ========================================= */
+
+        .enroll-footer {
+            text-align: center;
+
+            padding: 28px 10px 5px;
+
+            color: #555;
+
+            font-size: 11px;
+        }
+
+        .enroll-footer strong {
+            color: #3b82f6;
+        }
+
+        /* =========================================
+           RESPONSIVE
+        ========================================= */
+
+        @media (max-width: 950px) {
+
+            .enroll-grid {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+        @media (max-width: 650px) {
+
+            .enroll-page {
+                padding: 17px;
+            }
+
+            .page-title h1 {
+                font-size: 24px;
+            }
+
+            .enroll-card {
+                padding: 19px;
+                border-radius: 16px;
+            }
+
+            .camera-actions {
+                grid-template-columns: 1fr;
+            }
+
+            .camera-box {
+                min-height: 240px;
+            }
+
+            .face-guide {
+                width: 145px;
+                height: 185px;
+            }
+
+        }
+    </style>
 </head>
+
 
 <body>
 
-<main>
+<div class="dashboard">
 
-```
-<header>
-    <h1>Enroll Student</h1>
-    <a href="/">Attendance</a>
-</header>
+    <!-- =========================================
+         SIDEBAR
+    ========================================== -->
 
-<form id="enroll-form">
+    <aside class="sidebar">
 
-    <label>
-        Enrollment No.
-        <input
-            required
-            name="enrollment_id"
-            id="enrollment_id"
-            placeholder="2026001">
-    </label>
+        <div class="logo">
 
-    <label>
-        Student Name
-        <input
-            required
-            name="name"
-            id="name"
-            placeholder="Student name">
-    </label>
+            <div class="logo-icon">
+                ✓
+            </div>
 
-    <h3>Student Photo</h3>
+            <div>
+                <h2>FaceAttend</h2>
+                <span>Attendance System</span>
+            </div>
 
-    <video
-        id="camera"
-        autoplay
-        playsinline
-        style="width:100%; max-width:500px; display:none;">
-    </video>
+        </div>
 
-    <canvas
-        id="canvas"
-        style="display:none;">
-    </canvas>
 
-    <div style="margin-top:15px;">
+        <nav>
 
-        <button type="button" id="start-camera">
-            📷 Camera ON
-        </button>
+            <a href="/" class="nav-item">
+                <span>🏠</span>
+                Dashboard
+            </a>
 
-        <button type="button" id="stop-camera">
-            ⛔ Camera OFF
-        </button>
+            <a href="/students" class="nav-item">
+                <span>👥</span>
+                Students
+            </a>
 
-        <button type="button" id="capture">
-            📸 Capture Photo
-        </button>
+            <a href="/enroll" class="nav-item active">
+                <span>➕</span>
+                Add Student
+            </a>
 
-    </div>
+            <a href="/attendance" class="nav-item">
+                <span>✅</span>
+                Attendance
+            </a>
 
-    <p>OR upload a clear face photo:</p>
+            <a href="/#history" class="nav-item">
+                <span>📅</span>
+                History
+            </a>
 
-    <input
-        name="image"
-        id="photo"
-        type="file"
-        accept="image/*">
+        </nav>
 
-    <img
-        id="preview"
-        alt="Student photo preview"
-        style="display:none; width:250px; margin-top:15px;">
 
-    <br><br>
+        <div class="sidebar-bottom">
 
-    <button type="submit">
-        💾 Save Student
-    </button>
+            <div class="admin-box">
 
-    <p id="message"></p>
+                <div class="admin-avatar">
+                    A
+                </div>
 
-</form>
-```
+                <div>
+                    <strong>Admin</strong>
+                    <small>Administrator</small>
+                </div>
 
-</main>
+            </div>
+
+
+            <a
+                href="/logout"
+                class="logout-btn"
+                onclick="return confirm('Are you sure you want to logout?');"
+            >
+                <span>🚪</span>
+                Logout
+            </a>
+
+        </div>
+
+    </aside>
+
+
+    <!-- =========================================
+         MAIN CONTENT
+    ========================================== -->
+
+    <main class="main-content">
+
+        <div class="enroll-page">
+
+            <!-- HEADER -->
+
+            <header class="enroll-topbar">
+
+                <div class="page-title">
+
+                    <h1>
+                        Enroll Student
+                    </h1>
+
+                    <p>
+                        Register a new student with face recognition
+                    </p>
+
+                </div>
+
+
+                <a
+                    href="/"
+                    class="back-dashboard"
+                >
+                    ← Back to Dashboard
+                </a>
+
+            </header>
+
+
+            <!-- MAIN GRID -->
+
+            <div class="enroll-grid">
+
+
+                <!-- =================================
+                     FORM CARD
+                ================================== -->
+
+                <section class="enroll-card">
+
+                    <div class="card-heading">
+
+                        <div class="card-heading-icon">
+                            👨‍🎓
+                        </div>
+
+                        <div>
+
+                            <h2>
+                                Student Information
+                            </h2>
+
+                            <p>
+                                Enter student details and register face
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <form id="enroll-form">
+
+
+                        <!-- Enrollment ID -->
+
+                        <div class="form-group">
+
+                            <label
+                                class="form-label"
+                                for="enrollment_id"
+                            >
+                                Enrollment Number
+                                <span class="required">*</span>
+                            </label>
+
+                            <input
+                                required
+                                name="enrollment_id"
+                                id="enrollment_id"
+                                class="form-input"
+                                placeholder="e.g. 2026001"
+                                autocomplete="off"
+                            >
+
+                        </div>
+
+
+                        <!-- Student Name -->
+
+                        <div class="form-group">
+
+                            <label
+                                class="form-label"
+                                for="name"
+                            >
+                                Student Name
+                                <span class="required">*</span>
+                            </label>
+
+                            <input
+                                required
+                                name="name"
+                                id="name"
+                                class="form-input"
+                                placeholder="Enter student's full name"
+                                autocomplete="name"
+                            >
+
+                        </div>
+
+
+                        <!-- CAMERA -->
+
+                        <div class="camera-section">
+
+                            <div class="camera-label">
+
+                                <strong>
+                                    Student Photo
+                                </strong>
+
+                                <span
+                                    id="cameraStatus"
+                                    class="camera-status"
+                                >
+                                    <span class="camera-dot"></span>
+                                    Camera Off
+                                </span>
+
+                            </div>
+
+
+                            <div
+                                id="cameraBox"
+                                class="camera-box"
+                            >
+
+                                <video
+                                    id="camera"
+                                    autoplay
+                                    playsinline
+                                    style="display:none;"
+                                ></video>
+
+
+                                <div
+                                    id="cameraPlaceholder"
+                                    class="camera-placeholder"
+                                >
+
+                                    <div class="camera-placeholder-icon">
+                                        📷
+                                    </div>
+
+                                    <strong>
+                                        Camera Ready
+                                    </strong>
+
+                                    <span>
+                                        Click "Camera ON" to start
+                                    </span>
+
+                                </div>
+
+
+                                <div
+                                    id="faceGuide"
+                                    class="face-guide"
+                                    style="display:none;"
+                                ></div>
+
+                            </div>
+
+
+                            <!-- CAMERA BUTTONS -->
+
+                            <div class="camera-actions">
+
+                                <button
+                                    type="button"
+                                    id="start-camera"
+                                    class="camera-btn start"
+                                >
+                                    📷 Camera ON
+                                </button>
+
+
+                                <button
+                                    type="button"
+                                    id="stop-camera"
+                                    class="camera-btn stop"
+                                >
+                                    ⛔ Camera OFF
+                                </button>
+
+
+                                <button
+                                    type="button"
+                                    id="capture"
+                                    class="camera-btn capture"
+                                >
+                                    📸 Capture Photo
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- OR -->
+
+                        <div class="or-divider">
+                            OR
+                        </div>
+
+
+                        <!-- UPLOAD -->
+
+                        <div class="upload-area">
+
+                            <div class="upload-icon">
+                                🖼️
+                            </div>
+
+                            <strong>
+                                Upload a clear face photo
+                            </strong>
+
+                            <span>
+                                JPG, PNG or other supported image
+                            </span>
+
+                            <input
+                                name="image"
+                                id="photo"
+                                type="file"
+                                accept="image/*"
+                            >
+
+                        </div>
+
+
+                        <!-- PREVIEW -->
+
+                        <div
+                            id="previewSection"
+                            class="preview-section"
+                        >
+
+                            <div class="preview-title">
+                                Selected Photo
+                            </div>
+
+                            <div class="preview-wrapper">
+
+                                <img
+                                    id="preview"
+                                    alt="Student photo preview"
+                                >
+
+                                <div class="preview-check">
+                                    ✓
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- SAVE -->
+
+                        <button
+                            type="submit"
+                            class="save-button"
+                        >
+                            💾 Register Student
+                        </button>
+
+
+                        <p id="message"></p>
+
+                    </form>
+
+                </section>
+
+
+                <!-- =================================
+                     INFORMATION CARD
+                ================================== -->
+
+                <section class="enroll-card info-card">
+
+                    <div class="card-heading">
+
+                        <div class="card-heading-icon">
+                            ✨
+                        </div>
+
+                        <div>
+
+                            <h2>
+                                Registration Guide
+                            </h2>
+
+                            <p>
+                                Follow these steps for better recognition
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="info-list">
+
+
+                        <div class="info-item">
+
+                            <div class="info-icon">
+                                🪪
+                            </div>
+
+                            <div>
+
+                                <strong>
+                                    Enter Enrollment ID
+                                </strong>
+
+                                <span>
+                                    Use the student's unique college
+                                    enrollment number.
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="info-item">
+
+                            <div class="info-icon">
+                                👤
+                            </div>
+
+                            <div>
+
+                                <strong>
+                                    Enter Full Name
+                                </strong>
+
+                                <span>
+                                    Enter the student's name exactly as
+                                    you want it displayed.
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="info-item">
+
+                            <div class="info-icon">
+                                📷
+                            </div>
+
+                            <div>
+
+                                <strong>
+                                    Capture Face Clearly
+                                </strong>
+
+                                <span>
+                                    Keep the face straight, visible and
+                                    well-lit.
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="info-item">
+
+                            <div class="info-icon">
+                                💡
+                            </div>
+
+                            <div>
+
+                                <strong>
+                                    Use Good Lighting
+                                </strong>
+
+                                <span>
+                                    Avoid very dark rooms, backlight and
+                                    blurry images.
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+
+                    <!-- SECURITY -->
+
+                    <div class="security-card">
+
+                        <div class="security-title">
+                            🔐 Secure Registration
+                        </div>
+
+                        <p>
+                            Your student's face data is processed by the
+                            attendance system and stored securely for
+                            recognition.
+                        </p>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+
+            <!-- FOOTER -->
+
+            <footer class="enroll-footer">
+
+                FaceAttend © 2026
+                &nbsp; • &nbsp;
+                Built with ❤️ by
+                <strong>Raj</strong>
+
+            </footer>
+
+        </div>
+
+    </main>
+
+</div>
+
 
 <script>
 
 let stream = null;
 let capturedBlob = null;
 
-const video = document.getElementById("camera");
-const canvas = document.getElementById("canvas");
-const preview = document.getElementById("preview");
+
+/* =========================================
+   ELEMENTS
+========================================= */
+
+const video =
+    document.getElementById("camera");
+
+const cameraBox =
+    document.getElementById("cameraBox");
+
+const cameraPlaceholder =
+    document.getElementById("cameraPlaceholder");
+
+const faceGuide =
+    document.getElementById("faceGuide");
+
+const cameraStatus =
+    document.getElementById("cameraStatus");
+
+const canvas =
+    document.createElement("canvas");
+
+const preview =
+    document.getElementById("preview");
+
+const previewSection =
+    document.getElementById("previewSection");
 
 const startCamera =
     document.getElementById("start-camera");
@@ -129,87 +1375,157 @@ const message =
     document.getElementById("message");
 
 
-/* ==========================================
+/* =========================================
    CAMERA ON
-   ========================================== */
+========================================= */
 
 startCamera.onclick = async () => {
 
     try {
 
+        if (
+            !navigator.mediaDevices ||
+            !navigator.mediaDevices.getUserMedia
+        ) {
+
+            message.textContent =
+                "❌ Camera is not supported by this browser.";
+
+            return;
+        }
+
+
         stream =
             await navigator.mediaDevices.getUserMedia({
-                video: true,
+                video: {
+                    facingMode: "user"
+                },
                 audio: false
             });
+
 
         video.srcObject = stream;
 
         video.style.display = "block";
 
+        cameraPlaceholder.style.display = "none";
+
+        faceGuide.style.display = "block";
+
+        cameraBox.classList.add("active");
+
+        cameraStatus.classList.add("active");
+
+        cameraStatus.innerHTML =
+            '<span class="camera-dot"></span> Camera Active';
+
+
         message.textContent =
-            "Camera started.";
+            "Camera started. Position your face inside the frame.";
 
-    } catch (error) {
-
-        message.textContent =
-            "Camera permission denied or camera unavailable.";
-
-        console.error(error);
     }
+
+    catch (error) {
+
+        console.error(
+            "Camera error:",
+            error
+        );
+
+        message.textContent =
+            "❌ Camera permission denied or camera unavailable.";
+
+    }
+
 };
 
 
-/* ==========================================
+/* =========================================
    CAMERA OFF
-   ========================================== */
+========================================= */
 
 stopCamera.onclick = () => {
 
-    if (stream) {
-
-        stream.getTracks().forEach(track => {
-            track.stop();
-        });
-
-        stream = null;
-        video.srcObject = null;
-    }
-
-    video.style.display = "none";
+    stopCameraStream();
 
     message.textContent =
         "Camera stopped.";
+
 };
 
 
-/* ==========================================
+/* =========================================
+   STOP CAMERA FUNCTION
+========================================= */
+
+function stopCameraStream() {
+
+    if (stream) {
+
+        stream
+            .getTracks()
+            .forEach(track => {
+                track.stop();
+            });
+
+        stream = null;
+    }
+
+
+    video.srcObject = null;
+
+    video.style.display = "none";
+
+    cameraPlaceholder.style.display = "block";
+
+    faceGuide.style.display = "none";
+
+    cameraBox.classList.remove("active");
+
+    cameraStatus.classList.remove("active");
+
+    cameraStatus.innerHTML =
+        '<span class="camera-dot"></span> Camera Off';
+}
+
+
+/* =========================================
    CAPTURE PHOTO
-   ========================================== */
+========================================= */
 
 capture.onclick = () => {
 
     if (!stream) {
 
         message.textContent =
-            "First click Camera ON.";
+            "❌ First click Camera ON.";
 
         return;
     }
 
-    if (!video.videoWidth || !video.videoHeight) {
+
+    if (
+        !video.videoWidth ||
+        !video.videoHeight
+    ) {
 
         message.textContent =
-            "Camera is not ready yet.";
+            "❌ Camera is not ready yet.";
 
         return;
     }
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+
+    canvas.width =
+        video.videoWidth;
+
+    canvas.height =
+        video.videoHeight;
+
 
     const ctx =
         canvas.getContext("2d");
+
 
     ctx.drawImage(
         video,
@@ -219,85 +1535,106 @@ capture.onclick = () => {
         canvas.height
     );
 
+
     canvas.toBlob(
         blob => {
 
             if (!blob) {
 
                 message.textContent =
-                    "Could not capture photo.";
+                    "❌ Could not capture photo.";
 
                 return;
             }
 
+
             capturedBlob = blob;
+
 
             preview.src =
                 URL.createObjectURL(blob);
 
-            preview.style.display =
+
+            previewSection.style.display =
                 "block";
 
+
             message.textContent =
-                "Photo captured successfully.";
+                "✅ Photo captured successfully.";
 
         },
         "image/jpeg",
         0.90
     );
+
 };
 
 
-/* ==========================================
+/* =========================================
    FILE PREVIEW
-   ========================================== */
+========================================= */
 
 photoInput.onchange = () => {
 
     capturedBlob = null;
 
-    if (photoInput.files.length > 0) {
+
+    if (
+        photoInput.files &&
+        photoInput.files.length > 0
+    ) {
+
+        const file =
+            photoInput.files[0];
+
 
         preview.src =
-            URL.createObjectURL(
-                photoInput.files[0]
-            );
+            URL.createObjectURL(file);
 
-        preview.style.display =
+
+        previewSection.style.display =
             "block";
 
+
         message.textContent =
-            "Photo selected.";
+            "✅ Photo selected.";
+
     }
+
 };
 
 
-/* ==========================================
+/* =========================================
    SAVE STUDENT
-   ========================================== */
+========================================= */
 
 form.onsubmit = async (e) => {
 
     e.preventDefault();
 
+
     message.textContent =
-        "Saving student...";
+        "⏳ Registering student...";
+
 
     const enrollmentId =
-        document.getElementById(
-            "enrollment_id"
-        ).value.trim();
+        document
+            .getElementById("enrollment_id")
+            .value
+            .trim();
+
 
     const studentName =
-        document.getElementById(
-            "name"
-        ).value.trim();
+        document
+            .getElementById("name")
+            .value
+            .trim();
 
 
     if (!enrollmentId) {
 
         message.textContent =
-            "❌ Please enter Enrollment No.";
+            "❌ Please enter Enrollment Number.";
 
         return;
     }
@@ -328,9 +1665,9 @@ form.onsubmit = async (e) => {
     );
 
 
-    /* ==========================================
+    /* =====================================
        BACKEND EXPECTS "image"
-       ========================================== */
+    ====================================== */
 
     if (capturedBlob) {
 
@@ -342,7 +1679,10 @@ form.onsubmit = async (e) => {
 
     }
 
-    else if (photoInput.files.length > 0) {
+    else if (
+        photoInput.files &&
+        photoInput.files.length > 0
+    ) {
 
         formData.append(
             "image",
@@ -376,20 +1716,32 @@ form.onsubmit = async (e) => {
             await response.json();
 
 
-        if (response.ok && data.success) {
+        if (
+            response.ok &&
+            data.success
+        ) {
 
             message.textContent =
-                "✅ " + data.message;
+                "✅ " +
+                (
+                    data.message ||
+                    "Student enrolled successfully."
+                );
 
 
             form.reset();
 
             capturedBlob = null;
 
+
             preview.src = "";
 
-            preview.style.display =
+            previewSection.style.display =
                 "none";
+
+
+            stopCameraStream();
+
 
         }
 
@@ -397,20 +1749,44 @@ form.onsubmit = async (e) => {
 
             message.textContent =
                 "❌ " +
-                (data.message ||
-                 data.error ||
-                 "Enrollment failed.");
+                (
+                    data.message ||
+                    data.error ||
+                    "Enrollment failed."
+                );
+
         }
 
+    }
 
-    } catch (error) {
+    catch (error) {
+
+        console.error(
+            "Enrollment error:",
+            error
+        );
+
 
         message.textContent =
             "❌ Server error. Please try again.";
 
-        console.error(error);
     }
+
 };
+
+
+/* =========================================
+   CLEANUP CAMERA
+========================================= */
+
+window.addEventListener(
+    "beforeunload",
+    () => {
+
+        stopCameraStream();
+
+    }
+);
 
 </script>
 
