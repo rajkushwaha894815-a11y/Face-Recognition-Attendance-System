@@ -29,15 +29,11 @@ app = Flask(__name__)
 # ADMIN AUTHENTICATION
 # =========================================================
 
-# Secret key for Flask sessions
 app.secret_key = os.environ.get(
     "SECRET_KEY",
     "change-this-secret-key"
 )
 
-# Admin credentials
-# These defaults are only for LOCAL TESTING.
-# On Render, we will set environment variables.
 ADMIN_USERNAME = os.environ.get(
     "ADMIN_USERNAME",
     "admin"
@@ -1153,6 +1149,10 @@ def recognize():
 
             enrollment_id, name = best_student
 
+            # -------------------------------------------------
+            # CHECK WHETHER TODAY'S ATTENDANCE ALREADY EXISTS
+            # -------------------------------------------------
+
             cur.execute(
                 """
                 SELECT id
@@ -1167,6 +1167,10 @@ def recognize():
             )
 
             already_marked = cur.fetchone()
+
+            # -------------------------------------------------
+            # MARK ONLY TODAY'S ATTENDANCE
+            # -------------------------------------------------
 
             if not already_marked:
 
@@ -1220,6 +1224,7 @@ def recognize():
                     f"ATTENDANCE MARKED -> "
                     f"{enrollment_id} | "
                     f"{name} | "
+                    f"date={today} | "
                     f"distance={best_distance:.4f}"
                 )
 
@@ -1240,7 +1245,8 @@ def recognize():
                 print(
                     f"ALREADY MARKED -> "
                     f"{enrollment_id} | "
-                    f"{name}"
+                    f"{name} | "
+                    f"date={today}"
                 )
 
         has_recognized = any(
@@ -1318,6 +1324,7 @@ def dashboard():
             "%Y-%m-%d"
         )
 
+        # Total enrolled students
         cur.execute("""
             SELECT COUNT(*)
             FROM students
@@ -1325,6 +1332,7 @@ def dashboard():
 
         total_students = cur.fetchone()[0]
 
+        # Students actually marked present TODAY
         cur.execute(
             """
             SELECT COUNT(*)
@@ -1336,11 +1344,11 @@ def dashboard():
 
         present_today = cur.fetchone()[0]
 
-        absent_today = max(
-            total_students -
-            present_today,
-            0
-        )
+        # IMPORTANT:
+        # Do NOT automatically calculate absent students.
+        # Students without attendance are simply "Not Marked".
+
+        absent_today = 0
 
         attendance_rate = (
             round(
@@ -1468,6 +1476,20 @@ def attendance_management():
 
         try:
 
+            # =================================================
+            # IMPORTANT FIX
+            # =================================================
+            #
+            # We only read attendance for the selected date.
+            #
+            # If a student has no record:
+            #     status = "Not Marked"
+            #
+            # We DO NOT call it "Absent".
+            #
+            # No attendance row is created automatically.
+            # =================================================
+
             cur.execute(
                 """
                 SELECT
@@ -1479,7 +1501,7 @@ def attendance_management():
                     CASE
                         WHEN a.enrollment_id IS NOT NULL
                         THEN 'Present'
-                        ELSE 'Absent'
+                        ELSE 'Not Marked'
                     END AS status
 
                 FROM students s
@@ -1586,4 +1608,3 @@ if __name__ == "__main__":
         ),
         debug=False
     )
-
